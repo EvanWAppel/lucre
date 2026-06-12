@@ -1,68 +1,67 @@
 # Lucre
 
-Personal finance PWA — all your bank and credit card balances in one place.
+Single-user personal finance PWA — balances, net worth, subscriptions, spending,
+and bill alerts. Design decisions live in [DESIGN.md](DESIGN.md); the task board
+is [TASKS.md](TASKS.md).
 
 ## Stack
 
-- **Frontend**: Next.js 14 (App Router) + Tailwind CSS — deployed as a PWA
-- **Backend**: Python FastAPI — serves Plaid API routes and caches balances
-- **Database**: PostgreSQL (Railway managed)
-- **Bank data**: [Plaid](https://plaid.com) Development environment
-- **Hosting**: [Railway](https://railway.app) (monorepo, two services)
+- **App**: one Python FastAPI service serving server-rendered HTML (Jinja2 + HTMX),
+  installable as a PWA
+- **Database**: SQLite on a Railway volume, continuously replicated to Cloudflare R2
+  with [Litestream](https://litestream.io)
+- **Bank data**: [Plaid](https://plaid.com) (sandbox for development, production for real data)
+- **Email**: [Resend](https://resend.com) for the daily digest and urgent alerts
+- **Hosting**: [Railway](https://railway.app), single service
 
-## Project Structure
+## Development
 
-```
-lucre/
-  frontend/   # Next.js PWA
-  backend/    # Python FastAPI
-  railway.toml
-```
-
-## Getting Started
-
-### Prerequisites
-
-- [uv](https://docs.astral.sh/uv/) — Python package manager
-- Node.js 18+ and npm
-- A [Plaid](https://dashboard.plaid.com) account (Development environment)
-- A PostgreSQL database
-
-### 1. Clone and configure
+Prerequisites: [uv](https://docs.astral.sh/uv/), a Plaid account (sandbox keys are free).
 
 ```bash
-git clone <repo>
-cd lucre
-cp .env.example .env
-# Fill in PLAID_CLIENT_ID, PLAID_SECRET, DATABASE_URL, ENCRYPTION_KEY
-```
-
-### 2. Backend
-
-```bash
+cp .env.example .env   # fill in values; see comments in the file
 cd backend
 uv sync
-uv run python -m pytest       # run tests
-uv run uvicorn main:app --reload --port 8000
+uv run pytest                                  # tests
+uv run uvicorn main:app --reload --port 8000   # run the app
 ```
 
-### 3. Frontend
+Lint/typecheck/pre-commit:
 
 ```bash
-cd frontend
-npm install
-NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
+uv run ruff check . && uv run ty check
+uv run prek install   # one-time: installs the git hook
 ```
 
-### 4. Open on phone
+Generate secrets for `.env`:
 
-With both servers running on your local network, open the Railway-deployed URL on your phone and add it to your home screen.
-
-## Environment Variables
-
-See [`.env.example`](.env.example) for all required variables.
+```bash
+uv run python scripts/hash_password.py   # APP_PASSWORD_HASH
+uv run python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"  # ENCRYPTION_KEY
+uv run python -c "import secrets; print(secrets.token_urlsafe(32))"  # SESSION_SECRET
+```
 
 ## Deployment (Railway)
 
-Push to your linked GitHub repo. Railway auto-deploys both services from `railway.toml`.
-Set the environment variables in the Railway dashboard for each service.
+The root `Dockerfile` runs the app under Litestream
+(`litestream replicate -exec uvicorn ...`), restoring the database from R2 on a
+fresh volume.
+
+1. Create a Railway service from this repo; attach a volume mounted at `/data`.
+2. Set env vars: everything in `.env.example` (with
+   `DATABASE_URL=sqlite:////data/lucre.db`) plus `LITESTREAM_ENDPOINT`,
+   `LITESTREAM_BUCKET`, `LITESTREAM_ACCESS_KEY_ID`, `LITESTREAM_SECRET_ACCESS_KEY`
+   for the R2 bucket.
+3. The daily balance sync runs in-process at 07:00 America/New_York
+   (`LUCRE_ENABLE_SCHEDULER=1`, set in the Dockerfile).
+
+### Restore from backup
+
+```bash
+litestream restore -config litestream.yml /data/lucre.db
+```
+
+## Phone
+
+Open the deployed URL in Safari → Share → Add to Home Screen. Log in once; the
+session lasts a year.

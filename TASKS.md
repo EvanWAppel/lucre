@@ -30,25 +30,25 @@ built by another agent *anytime after A4*. **F** needs D's models.
 
 ## Group A — Foundation (do first)
 
-- [ ] **A1** Move the git root: repo currently lives at `backend/.git`; re-init (or `git mv`
+- [x] **A1** Move the git root: repo currently lives at `backend/.git`; re-init (or `git mv`
       history-preserving) so the repo root is `lucre/`, with a root `.gitignore` covering
       `.venv`, `*.db`, `.env`.
-- [ ] **A2** Fix `backend/config.py`: default `plaid_env="sandbox"`, validate it is
+- [x] **A2** Fix `backend/config.py`: default `plaid_env="sandbox"`, validate it is
       `sandbox|production` (test: invalid value raises). Add settings: `app_password_hash`,
       `session_secret`, `resend_api_key`, `alert_from_email`, `alert_to_email`.
-- [ ] **A3** Update `.env.example` to match A2 (drop `development`, `DATABASE_URL` becomes a
+- [x] **A3** Update `.env.example` to match A2 (drop `development`, `DATABASE_URL` becomes a
       SQLite path like `sqlite:///data/lucre.db`).
-- [ ] **A4** SQLite-ify `backend/database.py`: `connect_args={"check_same_thread": False}`,
+- [x] **A4** SQLite-ify `backend/database.py`: `connect_args={"check_same_thread": False}`,
       enable WAL + foreign-keys pragmas on connect, drop Postgres pool args. Remove
       `psycopg2-binary` (`uv remove psycopg2-binary`). Test: `init_db()` creates tables in a
       tmp-path SQLite file.
-- [ ] **A5** Create `backend/tests/conftest.py` fixtures: in-memory SQLite engine + session
+- [x] **A5** Create `backend/tests/conftest.py` fixtures: in-memory SQLite engine + session
       (function-scoped, fresh schema), `TestClient` with `get_db` override, settings override
       fixture, and a `FakePlaidClient` stub (canned link-token / exchange / accounts /
       transactions-sync responses, used everywhere Plaid is mocked).
-- [ ] **A6** Tooling: `uv add --dev ty prek`; add `prek` config running ruff (lint+format) and
+- [x] **A6** Tooling: `uv add --dev ty prek`; add `prek` config running ruff (lint+format) and
       ty; install the git hook. Verify `uv run prek run --all-files` passes.
-- [ ] **A7** Logging setup: `logging.basicConfig` (level from env, default INFO) wired into app
+- [x] **A7** Logging setup: `logging.basicConfig` (level from env, default INFO) wired into app
       startup; uvicorn access logs on.
 - [ ] **A8 [HUMAN]** Apply for Plaid **production** access in the dashboard (approval takes
       days — start now; everything until B12 runs on sandbox).
@@ -60,34 +60,34 @@ built by another agent *anytime after A4*. **F** needs D's models.
 Goal: a deployed, password-protected page on your phone showing real (sandbox) balances,
 synced daily. Smallest end-to-end proof of the whole pipeline.
 
-- [ ] **B1** `backend/main.py`: FastAPI app factory, `init_db()` on startup, `GET /health` →
+- [x] **B1** `backend/main.py`: FastAPI app factory, `init_db()` on startup, `GET /health` →
       `{"status": "ok"}`. Test via TestClient.
-- [ ] **B2** Server-rendered shell: `uv add jinja2`; `templates/base.html` (HTMX from CDN,
+- [x] **B2** Server-rendered shell: `uv add jinja2`; `templates/base.html` (HTMX from CDN,
       viewport meta), `static/` mount, PWA `manifest.json` + minimal service worker + icon.
       Test: `GET /` returns HTML containing the app shell.
-- [ ] **B3** Auth: `uv add argon2-cffi itsdangerous`; password check against
+- [x] **B3** Auth: `uv add argon2-cffi itsdangerous`; password check against
       `app_password_hash`, signed session cookie (1-year expiry, `HttpOnly`, `Secure`,
       `SameSite=Lax`), login page, logout, dependency that redirects anonymous requests to
       `/login`. In-memory rate limit: 5 failed attempts → 15-min lockout. Tests: wrong/right
       password, redirect, lockout. Plus a `scripts/hash_password.py` helper.
-- [ ] **B4** Plaid client module `backend/plaid_client.py`: thin wrapper exposing
+- [x] **B4** Plaid client module `backend/plaid_client.py`: thin wrapper exposing
       `create_link_token()`, `exchange_public_token(token)`, `get_accounts(access_token)`.
       Real Plaid SDK behind an interface the `FakePlaidClient` fixture implements. Tests use
       the fake only.
-- [ ] **B5** Link flow: `GET /link` page embedding Plaid Link JS; `POST /api/plaid/exchange`
+- [x] **B5** Link flow: `GET /link` page embedding Plaid Link JS; `POST /api/plaid/exchange`
       exchanges the public token, stores `Item` (Fernet-encrypted access token via
       `crypto.py`) + its `Account` rows. Test: posting a fake public token persists item +
       accounts; duplicate `plaid_item_id` rejected cleanly.
-- [ ] **B6** Balance sync service `backend/services/sync.py`: for each Item, fetch accounts,
+- [x] **B6** Balance sync service `backend/services/sync.py`: for each Item, fetch accounts,
       upsert `Account` rows, `touch()` balances. Idempotent. Tests: new account appears,
       existing balance updates, one failing item doesn't abort the others (error logged,
       not swallowed).
-- [ ] **B7** Dashboard `GET /`: accounts grouped by type (cash / credit), per-account balance,
+- [x] **B7** Dashboard `GET /`: accounts grouped by type (cash / credit), per-account balance,
       headline total (cash − credit), `last_refreshed_at`. Test: seeded accounts render with
       correct total.
-- [ ] **B8** "Sync now" button: HTMX `POST /api/sync` runs B6 and re-renders the dashboard
+- [x] **B8** "Sync now" button: HTMX `POST /api/sync` runs B6 and re-renders the dashboard
       fragment. Test: balance change visible in response.
-- [ ] **B9** Scheduler: `uv add apscheduler`; daily sync job (07:00 America/New_York) started
+- [x] **B9** Scheduler: `uv add apscheduler`; daily sync job (07:00 America/New_York) started
       with the app, guarded so TestClient never starts it. Test: job is registered with
       correct trigger.
 - [ ] **B10** Deploy: Dockerfile (uv-based, runs litestream as supervisor →
@@ -99,7 +99,7 @@ synced daily. Smallest end-to-end proof of the whole pipeline.
 - [ ] **B12 [HUMAN]** Plaid production approved → flip `PLAID_ENV=production`, connect real
       checking/savings/credit accounts via `/link`.
 - [ ] **B13 [HUMAN]** Add PWA to phone home screen; confirm login survives a week.
-- [ ] **B14** Rewrite `README.md` to match DESIGN.md (single service, SQLite, Railway volume,
+- [x] **B14** Rewrite `README.md` to match DESIGN.md (single service, SQLite, Railway volume,
       Litestream, run/deploy/restore instructions).
 
 ## Group C — Transactions & categories (after B6; one agent)

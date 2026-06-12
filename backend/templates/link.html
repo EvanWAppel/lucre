@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Connect a bank — Lucre{% endblock %}
+{% block content %}
+<h1>Connect a bank</h1>
+<p>Opens Plaid Link to connect a checking, savings, or credit card account.</p>
+<button id="link-button" class="primary">Connect with Plaid</button>
+<p id="link-status"></p>
+<script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+<script>
+  const status = document.getElementById("link-status");
+  document.getElementById("link-button").addEventListener("click", async () => {
+    const tokenResponse = await fetch("/api/plaid/link_token", { method: "POST" });
+    const { link_token } = await tokenResponse.json();
+    const handler = Plaid.create({
+      token: link_token,
+      onSuccess: async (public_token, metadata) => {
+        const response = await fetch("/api/plaid/exchange", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            public_token,
+            institution_name: metadata.institution ? metadata.institution.name : "Unknown institution",
+          }),
+        });
+        if (response.ok) {
+          window.location = "/";
+        } else {
+          const detail = await response.json();
+          status.textContent = "Error: " + (detail.detail || response.status);
+        }
+      },
+    });
+    handler.open();
+  });
+</script>
+{% endblock %}

@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import DateTime, Float, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -48,4 +48,4 @@ class Account(Base):
 
     def touch(self, balance: float | None) -> None:
         self.balance = balance
-        self.last_refreshed_at = datetime.now(timezone.utc)
+        self.last_refreshed_at = datetime.now(UTC)

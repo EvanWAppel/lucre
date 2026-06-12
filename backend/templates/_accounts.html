@@ -1,0 +1,38 @@
+{% if sync_errors %}
+<div class="error">Sync failed for: {{ sync_errors | join(", ") }}</div>
+{% endif %}
+
+{% if not cash_accounts and not credit_accounts %}
+<p>No accounts yet. <a href="/link">Connect your first bank</a>.</p>
+{% else %}
+<section class="net-total">
+  <h1>${{ net_total | money }}</h1>
+  <p class="muted">
+    Net total
+    {% if last_refreshed_at %} · updated {{ last_refreshed_at.strftime("%b %-d, %-H:%M") }}{% endif %}
+  </p>
+  <button hx-post="/api/sync" hx-target="#accounts" hx-swap="innerHTML">Sync now</button>
+</section>
+
+{% if cash_accounts %}
+<section>
+  <h2>Cash · ${{ cash_total | money }}</h2>
+  <ul class="accounts">
+    {% for account in cash_accounts %}
+    <li><span>{{ account.name }}</span><span>${{ account.balance | money }}</span></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if credit_accounts %}
+<section>
+  <h2>Credit · ${{ credit_total | money }}</h2>
+  <ul class="accounts">
+    {% for account in credit_accounts %}
+    <li><span>{{ account.name }}</span><span>${{ account.balance | money }}</span></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endif %}

@@ -1,0 +1,11 @@
+dbs:
+  - path: /data/lucre.db
+    replicas:
+      - type: s3
+        # Cloudflare R2: https://<account-id>.r2.cloudflarestorage.com
+        endpoint: ${LITESTREAM_ENDPOINT}
+        bucket: ${LITESTREAM_BUCKET}
+        path: lucre
+        region: auto
+        access-key-id: ${LITESTREAM_ACCESS_KEY_ID}
+        secret-access-key: ${LITESTREAM_SECRET_ACCESS_KEY}
