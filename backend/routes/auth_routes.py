@@ -46,7 +46,7 @@ def login(request: Request, password: Annotated[str, Form()]):
         create_session_token(),
         max_age=SESSION_MAX_AGE_SECONDS,
         httponly=True,
-        secure=True,
+        secure=settings.cookie_secure,
         samesite="lax",
     )
     return response

@@ -1,6 +1,12 @@
+from pathlib import Path
 from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# .env lives at the repo root, one level above backend/. Resolved from this file
+# so it works regardless of the current working directory; real env vars always
+# take precedence (e.g. on Railway, where no .env exists).
+_ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
 
 
 class Settings(BaseSettings):
@@ -12,11 +18,13 @@ class Settings(BaseSettings):
     encryption_key: str
     app_password_hash: str
     session_secret: str
+    # Set false only for local http development (Safari rejects Secure cookies on http://localhost)
+    cookie_secure: bool = True
     resend_api_key: str = ""
     alert_from_email: str = ""
     alert_to_email: str = ""
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file=str(_ENV_FILE), env_file_encoding="utf-8")
 
 
 # Populated from the environment / .env file at import time.

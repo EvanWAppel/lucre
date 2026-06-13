@@ -14,6 +14,9 @@ os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
 os.environ.setdefault("ENCRYPTION_KEY", Fernet.generate_key().decode())
 os.environ.setdefault("APP_PASSWORD_HASH", PasswordHasher().hash(TEST_PASSWORD))
 os.environ.setdefault("SESSION_SECRET", "test-session-secret")
+# Env vars beat the developer's real .env (dotenv has lowest precedence), keeping
+# tests hermetic even when a local .env sets dev-friendly values.
+os.environ.setdefault("COOKIE_SECURE", "true")
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

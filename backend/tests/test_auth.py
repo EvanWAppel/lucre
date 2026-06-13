@@ -62,6 +62,19 @@ def test_login_right_password_grants_access(client):
     assert "Lucre" in home.text
 
 
+def test_session_cookie_secure_by_default(client):
+    response = client.post("/login", data={"password": TEST_PASSWORD}, follow_redirects=False)
+    cookie = response.headers["set-cookie"]
+    assert "Secure" in cookie
+    assert "HttpOnly" in cookie
+
+
+def test_session_cookie_not_secure_when_disabled(client, override_settings):
+    override_settings(cookie_secure=False)
+    response = client.post("/login", data={"password": TEST_PASSWORD}, follow_redirects=False)
+    assert "Secure" not in response.headers["set-cookie"]
+
+
 def test_logout_clears_session(client):
     client.post("/login", data={"password": TEST_PASSWORD})
     assert client.get("/").status_code == 200
