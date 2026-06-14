@@ -99,15 +99,20 @@ synced daily. Smallest end-to-end proof of the whole pipeline.
 - [ ] **B12 [HUMAN]** Plaid production approved → flip `PLAID_ENV=production`, connect real
       checking/savings/credit accounts via `/link`.
 - [ ] **B13 [HUMAN]** Add PWA to phone home screen; confirm login survives a week.
+- [ ] **B15** OAuth institution support (needed for Chase and most major banks): register the
+      deployed `https://<app>/link` URL as an allowed redirect URI in the Plaid dashboard
+      **[HUMAN]**, pass `redirect_uri` in `create_link_token()`, and re-initialize Link with
+      `received_redirect_uri` when the user lands back on `/link?oauth_state_id=...`.
+      Test: link token request includes the redirect URI.
 - [x] **B14** Rewrite `README.md` to match DESIGN.md (single service, SQLite, Railway volume,
       Litestream, run/deploy/restore instructions).
 
 ## Group C — Transactions & categories (after B6; one agent)
 
-- [ ] **C1** Models: `Transaction` (plaid_transaction_id unique, account FK, date, name,
+- [x] **C1** Models: `Transaction` (plaid_transaction_id unique, account FK, date, name,
       merchant_name, amount, plaid_category, user_category, pending) and `Item.sync_cursor`.
       Tests: round-trip, uniqueness.
-- [ ] **C2** Cursor sync: extend `plaid_client` + sync service with `/transactions/sync` —
+- [x] **C2** Cursor sync: extend `plaid_client` + sync service with `/transactions/sync` —
       apply `added`/`modified`/`removed`, paginate `has_more`, persist cursor per item.
       Tests with multi-page fake responses, including a removed-transaction case.
 - [ ] **C3** First-sync backfill pulls full available history (24 months) by paging from a

@@ -1,4 +1,11 @@
-from plaid_client import PlaidClient, get_plaid_client, normalize_accounts
+from datetime import date
+
+from plaid_client import (
+    PlaidClient,
+    get_plaid_client,
+    normalize_accounts,
+    normalize_transaction,
+)
 
 
 def test_normalize_accounts_maps_plaid_shape():
@@ -34,6 +41,46 @@ def test_normalize_accounts_maps_plaid_shape():
             "balance": 432.10,
         },
     ]
+
+
+def test_normalize_transaction_maps_plaid_shape():
+    raw = {
+        "transaction_id": "txn-1",
+        "account_id": "acct-1",
+        "date": date(2026, 6, 1),
+        "name": "NETFLIX.COM",
+        "merchant_name": "Netflix",
+        "amount": 15.49,
+        "personal_finance_category": {"primary": "ENTERTAINMENT", "detailed": "ENTERTAINMENT_TV"},
+        "pending": False,
+    }
+    assert normalize_transaction(raw) == {
+        "plaid_transaction_id": "txn-1",
+        "plaid_account_id": "acct-1",
+        "date": date(2026, 6, 1),
+        "name": "NETFLIX.COM",
+        "merchant_name": "Netflix",
+        "amount": 15.49,
+        "plaid_category": "ENTERTAINMENT",
+        "pending": False,
+    }
+
+
+def test_normalize_transaction_handles_iso_date_string_and_null_category():
+    raw = {
+        "transaction_id": "txn-2",
+        "account_id": "acct-1",
+        "date": "2026-06-02",
+        "name": "UNKNOWN",
+        "merchant_name": None,
+        "amount": 5.0,
+        "personal_finance_category": None,
+        "pending": True,
+    }
+    result = normalize_transaction(raw)
+    assert result["date"] == date(2026, 6, 2)
+    assert result["plaid_category"] is None
+    assert result["merchant_name"] is None
 
 
 def test_get_plaid_client_returns_singleton():

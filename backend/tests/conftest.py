@@ -1,4 +1,5 @@
 import os
+from datetime import date
 
 from argon2 import PasswordHasher
 from cryptography.fernet import Fernet
@@ -100,6 +101,39 @@ class FakePlaidClient:
                 },
             ]
         }
+        # /transactions/sync pages, keyed by access token. Each page holds
+        # already-normalized (internal-shape) transactions in added/modified and
+        # plaid_transaction_id strings in removed. The fake walks pages by cursor.
+        self.transactions_pages = {
+            "access-token-1": [
+                {
+                    "added": [
+                        {
+                            "plaid_transaction_id": "txn-netflix-1",
+                            "plaid_account_id": "acct-checking-1",
+                            "date": date(2026, 6, 1),
+                            "name": "NETFLIX.COM",
+                            "merchant_name": "Netflix",
+                            "amount": 15.49,
+                            "plaid_category": "ENTERTAINMENT",
+                            "pending": False,
+                        },
+                        {
+                            "plaid_transaction_id": "txn-grocery-1",
+                            "plaid_account_id": "acct-credit-1",
+                            "date": date(2026, 6, 2),
+                            "name": "WHOLE FOODS",
+                            "merchant_name": "Whole Foods",
+                            "amount": 82.13,
+                            "plaid_category": "FOOD_AND_DRINK",
+                            "pending": False,
+                        },
+                    ],
+                    "modified": [],
+                    "removed": [],
+                }
+            ]
+        }
 
     def create_link_token(self) -> str:
         return self.link_token
@@ -109,6 +143,18 @@ class FakePlaidClient:
 
     def get_accounts(self, access_token: str) -> list[dict]:
         return [dict(account) for account in self.accounts[access_token]]
+
+    def transactions_sync(self, access_token: str, cursor: str | None) -> dict:
+        pages = self.transactions_pages[access_token]
+        index = 0 if cursor is None else int(cursor.rsplit("-", 1)[-1])
+        page = pages[index]
+        return {
+            "added": [dict(t) for t in page.get("added", [])],
+            "modified": [dict(t) for t in page.get("modified", [])],
+            "removed": list(page.get("removed", [])),
+            "next_cursor": f"cursor-{index + 1}",
+            "has_more": index + 1 < len(pages),
+        }
 
 
 @pytest.fixture
