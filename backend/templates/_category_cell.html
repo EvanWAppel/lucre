@@ -1,0 +1,17 @@
+{# Whole-cell fragment: also the PATCH response, so it must stay a single <td>. #}
+<td class="txn-category" id="cat-{{ txn.id }}">
+  <select name="category"
+          hx-patch="/api/transactions/{{ txn.id }}/category"
+          hx-target="#cat-{{ txn.id }}"
+          hx-swap="outerHTML"
+          hx-trigger="change">
+    <option value="" {% if not txn.user_category %}selected{% endif %}>
+      {{ txn.plaid_category or "Uncategorized" }}{% if not txn.user_category %} (auto){% endif %}
+    </option>
+    {% for cat in categories %}
+    {% if cat != "Uncategorized" %}
+    <option value="{{ cat }}" {% if txn.user_category == cat %}selected{% endif %}>{{ cat }}</option>
+    {% endif %}
+    {% endfor %}
+  </select>
+</td>

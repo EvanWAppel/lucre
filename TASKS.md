@@ -119,9 +119,9 @@ synced daily. Smallest end-to-end proof of the whole pipeline.
       null cursor. Test: large fake history fully ingested, cursor saved.
 - [x] **C4** Effective-category logic: `user_category` overrides `plaid_category`; expose
       `Transaction.effective_category`. Pure + tested.
-- [ ] **C5** Transactions page `GET /transactions`: month + account + category filters, HTMX
+- [x] **C5** Transactions page `GET /transactions`: month + account + category filters, HTMX
       pagination (50/page), pending styled distinctly. Tests for filters.
-- [ ] **C6** Recategorize: inline select posts `PATCH /api/transactions/{id}/category`. Test:
+- [x] **C6** Recategorize: inline select posts `PATCH /api/transactions/{id}/category`. Test:
       override persists, effective category changes.
 - [ ] **C7** Merchant rules: `MerchantRule` model (merchant_key → category); "always apply to
       this merchant" option when recategorizing, applied to incoming transactions at sync

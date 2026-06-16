@@ -26,3 +26,20 @@ main { padding: 1rem; max-width: 640px; margin: 0 auto; }
 .login-form input, .login-form button { padding: 0.75rem; font-size: 1rem; }
 .login-form button { background: var(--accent); color: white; border: none; border-radius: 6px; }
 .error { color: var(--danger); }
+nav { display: flex; gap: 1rem; }
+.nav-link { color: white; text-decoration: none; font-size: 0.95rem; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+.filters input, .filters select, .filters button { padding: 0.4rem; font-size: 0.9rem; }
+.filters .clear { align-self: center; font-size: 0.85rem; }
+
+table.transactions { width: 100%; border-collapse: collapse; }
+table.transactions td { padding: 0.5rem 0.25rem; border-bottom: 1px solid rgba(128,128,128,0.2); }
+.txn-date { white-space: nowrap; color: gray; font-size: 0.85rem; }
+.txn-category { color: gray; font-size: 0.8rem; }
+.txn-amount { text-align: right; white-space: nowrap; }
+.txn.pending { opacity: 0.55; font-style: italic; }
+.pending-badge {
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.03em;
+  background: rgba(128,128,128,0.25); border-radius: 4px; padding: 0 0.3rem; margin-left: 0.4rem;
+}

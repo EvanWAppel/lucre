@@ -1,0 +1,26 @@
+{% for txn in result.transactions %}
+<tr class="txn {% if txn.pending %}pending{% endif %}">
+  <td class="txn-date">{{ txn.date.strftime("%b %-d") }}</td>
+  <td class="txn-name">
+    {{ txn.merchant_name or txn.name }}
+    {% if txn.pending %}<span class="pending-badge">pending</span>{% endif %}
+  </td>
+  {% include "_category_cell.html" %}
+  <td class="txn-amount">${{ txn.amount | money }}</td>
+</tr>
+{% else %}
+<tr><td colspan="4" class="muted">No transactions match these filters.</td></tr>
+{% endfor %}
+
+{% if result.has_next %}
+<tr id="load-more">
+  <td colspan="4">
+    <button
+      hx-get="/transactions?page={{ result.page + 1 }}{% if filters.month %}&month={{ filters.month }}{% endif %}{% if filters.account_id %}&account_id={{ filters.account_id }}{% endif %}{% if filters.category %}&category={{ filters.category }}{% endif %}"
+      hx-target="#load-more"
+      hx-swap="outerHTML">
+      Load more
+    </button>
+  </td>
+</tr>
+{% endif %}
