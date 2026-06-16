@@ -76,3 +76,8 @@ class Transaction(Base):
     pending: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     account: Mapped["Account"] = relationship("Account", back_populates="transactions")
+
+    @property
+    def effective_category(self) -> str:
+        """The user's manual override if set, else Plaid's category, else a sentinel."""
+        return self.user_category or self.plaid_category or "Uncategorized"

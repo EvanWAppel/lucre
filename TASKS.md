@@ -115,9 +115,9 @@ synced daily. Smallest end-to-end proof of the whole pipeline.
 - [x] **C2** Cursor sync: extend `plaid_client` + sync service with `/transactions/sync` —
       apply `added`/`modified`/`removed`, paginate `has_more`, persist cursor per item.
       Tests with multi-page fake responses, including a removed-transaction case.
-- [ ] **C3** First-sync backfill pulls full available history (24 months) by paging from a
+- [x] **C3** First-sync backfill pulls full available history (24 months) by paging from a
       null cursor. Test: large fake history fully ingested, cursor saved.
-- [ ] **C4** Effective-category logic: `user_category` overrides `plaid_category`; expose
+- [x] **C4** Effective-category logic: `user_category` overrides `plaid_category`; expose
       `Transaction.effective_category`. Pure + tested.
 - [ ] **C5** Transactions page `GET /transactions`: month + account + category filters, HTMX
       pagination (50/page), pending styled distinctly. Tests for filters.

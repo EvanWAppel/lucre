@@ -9,6 +9,7 @@ from plaid.model.country_code import CountryCode
 from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
 from plaid.model.link_token_create_request import LinkTokenCreateRequest
 from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
+from plaid.model.link_token_transactions import LinkTokenTransactions
 from plaid.model.products import Products
 from plaid.model.transactions_sync_request import TransactionsSyncRequest
 
@@ -20,6 +21,10 @@ _HOSTS = {
     "sandbox": plaid.Environment.Sandbox,
     "production": plaid.Environment.Production,
 }
+
+# How far back Plaid backfills transactions on first connect. 24 months so annual
+# subscriptions are seen at least twice and category trends are useful immediately.
+TRANSACTIONS_DAYS_REQUESTED = 730
 
 
 class PlaidClientLike(Protocol):
@@ -82,6 +87,7 @@ class PlaidClient:
             user=LinkTokenCreateRequestUser(client_user_id="lucre-single-user"),
             client_name="Lucre",
             products=[Products("transactions")],
+            transactions=LinkTokenTransactions(days_requested=TRANSACTIONS_DAYS_REQUESTED),
             country_codes=[CountryCode("US")],
             language="en",
         )
