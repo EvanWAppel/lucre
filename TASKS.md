@@ -135,12 +135,12 @@ synced daily. Smallest end-to-end proof of the whole pipeline.
       store numbers / city suffixes / trailing IDs ("NETFLIX.COM 866-...", "STARBUCKS #1234")
       into a stable `merchant_key`. Pure function, table-driven tests with ugly real-world
       strings.
-- [ ] **D2** Detector core `backend/services/recurring.py`: given a list of (merchant_key,
+- [x] **D2** Detector core `backend/services/recurring.py`: given a list of (merchant_key,
       date, amount) tuples, return series with cadence (weekly/monthly/annual), median
       amount, last_seen, predicted next date. Tolerances: ±3 days monthly, ±10 days annual,
       amount within 15%. Pure function. Golden tests: Netflix monthly, annual Prime, variable
       utility bill, gas-station noise that must NOT match.
-- [ ] **D3** Price-increase rule: series' newest amount > 5% above its trailing median →
+- [x] **D3** Price-increase rule: series' newest amount > 5% above its trailing median →
       flagged with old/new amounts. Pure + tested.
 - [ ] **D4** Persistence: `RecurringSeries` model (merchant_key, cadence, median_amount,
       last_seen, next_expected, active, dismissed). Diff-and-upsert from detector output;
