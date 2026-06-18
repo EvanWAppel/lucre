@@ -123,15 +123,15 @@ synced daily. Smallest end-to-end proof of the whole pipeline.
       pagination (50/page), pending styled distinctly. Tests for filters.
 - [x] **C6** Recategorize: inline select posts `PATCH /api/transactions/{id}/category`. Test:
       override persists, effective category changes.
-- [ ] **C7** Merchant rules: `MerchantRule` model (merchant_key → category); "always apply to
+- [x] **C7** Merchant rules: `MerchantRule` model (merchant_key → category); "always apply to
       this merchant" option when recategorizing, applied to incoming transactions at sync
       and (optionally) retroactively. Tests: future txn auto-categorized; retro apply.
-- [ ] **C8** Spending view `GET /spending`: month picker, total + per-category sums (effective
+- [x] **C8** Spending view `GET /spending`: month picker, total + per-category sums (effective
       category) with simple CSS bar chart. Test: sums correct, refunds/credits handled.
 
 ## Group D — Recurring detection (pure logic; can start after A5, parallel with B/C)
 
-- [ ] **D1** Merchant normalization `backend/services/merchants.py`: collapse case, strip
+- [x] **D1** Merchant normalization `backend/services/merchants.py`: collapse case, strip
       store numbers / city suffixes / trailing IDs ("NETFLIX.COM 866-...", "STARBUCKS #1234")
       into a stable `merchant_key`. Pure function, table-driven tests with ugly real-world
       strings.

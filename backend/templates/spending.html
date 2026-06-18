@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Spending — Lucre{% endblock %}
+{% block nav %}
+<nav>
+  <a href="/" class="nav-link">Dashboard</a>
+  <a href="/transactions" class="nav-link">Transactions</a>
+</nav>
+{% endblock %}
+{% block content %}
+<h1>Spending</h1>
+
+<form method="get" action="/spending" class="filters">
+  <input type="month" name="month" value="{{ month or '' }}">
+  <button type="submit">View</button>
+</form>
+
+<p class="spend-total">Total spend: <strong>${{ summary.total | money }}</strong></p>
+
+{% if summary.categories %}
+<ul class="spend-bars">
+  {% for cat in summary.categories %}
+  <li>
+    <div class="spend-row">
+      <span class="spend-name">{{ cat.name }}</span>
+      <span class="spend-amount">${{ cat.amount | money }}</span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill" style="width: {{ (cat.amount / max_amount * 100) if max_amount else 0 }}%"></div>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="muted">No spending recorded for this period.</p>
+{% endif %}
+{% endblock %}

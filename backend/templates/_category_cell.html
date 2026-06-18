@@ -4,7 +4,8 @@
           hx-patch="/api/transactions/{{ txn.id }}/category"
           hx-target="#cat-{{ txn.id }}"
           hx-swap="outerHTML"
-          hx-trigger="change">
+          hx-trigger="change"
+          hx-include="#applyall-{{ txn.id }}">
     <option value="" {% if not txn.user_category %}selected{% endif %}>
       {{ txn.plaid_category or "Uncategorized" }}{% if not txn.user_category %} (auto){% endif %}
     </option>
@@ -14,4 +15,7 @@
     {% endif %}
     {% endfor %}
   </select>
+  <label class="apply-all" title="Apply to all transactions from this merchant">
+    <input type="checkbox" id="applyall-{{ txn.id }}" name="apply_to_merchant"> all
+  </label>
 </td>

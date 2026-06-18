@@ -43,3 +43,11 @@ table.transactions td { padding: 0.5rem 0.25rem; border-bottom: 1px solid rgba(1
   font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.03em;
   background: rgba(128,128,128,0.25); border-radius: 4px; padding: 0 0.3rem; margin-left: 0.4rem;
 }
+.apply-all { font-size: 0.7rem; color: gray; margin-left: 0.3rem; white-space: nowrap; }
+
+.spend-total { font-size: 1.1rem; }
+.spend-bars { list-style: none; padding: 0; }
+.spend-bars li { margin-bottom: 0.75rem; }
+.spend-row { display: flex; justify-content: space-between; font-size: 0.9rem; }
+.bar-track { background: rgba(128,128,128,0.15); border-radius: 4px; height: 8px; margin-top: 0.2rem; }
+.bar-fill { background: var(--accent); height: 100%; border-radius: 4px; }

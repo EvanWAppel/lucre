@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 from crypto import decrypt
 from models import Account, Item, Transaction
 from plaid_client import PlaidClientLike
+from services.merchants import merchant_key
+from services.rules import load_rules
 
 logger = logging.getLogger(__name__)
 
@@ -53,11 +55,13 @@ def sync_balances(db: Session, plaid: PlaidClientLike) -> dict:
     return {"items_synced": items_synced, "accounts_updated": accounts_updated, "errors": errors}
 
 
-def _upsert_transaction(db: Session, account_id: int, raw: dict) -> None:
+def _upsert_transaction(db: Session, account_id: int, raw: dict, rules: dict[str, str]) -> bool:
     """Insert a new transaction or update mutable fields of an existing one.
-    The user's manual category override is never touched."""
+    Returns True if newly inserted. The user's manual category override is never
+    touched; a matching merchant rule only auto-categorizes brand-new transactions."""
     txn = db.query(Transaction).filter_by(plaid_transaction_id=raw["plaid_transaction_id"]).first()
-    if txn is None:
+    is_new = txn is None
+    if is_new:
         txn = Transaction(
             account_id=account_id,
             plaid_transaction_id=raw["plaid_transaction_id"],
@@ -69,6 +73,10 @@ def _upsert_transaction(db: Session, account_id: int, raw: dict) -> None:
     txn.amount = raw["amount"]
     txn.plaid_category = raw["plaid_category"]
     txn.pending = raw["pending"]
+    txn.merchant_key = merchant_key(raw["merchant_name"] or raw["name"])
+    if is_new and txn.merchant_key and txn.merchant_key in rules:
+        txn.user_category = rules[txn.merchant_key]
+    return is_new
 
 
 def sync_transactions(db: Session, plaid: PlaidClientLike) -> dict:
@@ -78,6 +86,7 @@ def sync_transactions(db: Session, plaid: PlaidClientLike) -> dict:
     resumes from where it stopped. One failing item is logged and reported, never
     aborting the rest."""
     items = db.query(Item).all()
+    rules = load_rules(db)
     added = modified = removed = 0
     errors: list[str] = []
 
@@ -97,14 +106,7 @@ def sync_transactions(db: Session, plaid: PlaidClientLike) -> dict:
                             raw["plaid_account_id"],
                         )
                         continue
-                    is_new = (
-                        db.query(Transaction.id)
-                        .filter_by(plaid_transaction_id=raw["plaid_transaction_id"])
-                        .first()
-                        is None
-                    )
-                    _upsert_transaction(db, account_id, raw)
-                    if is_new:
+                    if _upsert_transaction(db, account_id, raw, rules):
                         added += 1
                     else:
                         modified += 1

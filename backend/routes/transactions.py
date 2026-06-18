@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 from auth import require_login
 from database import get_db
 from models import Account, Transaction
+from services.merchants import merchant_key
+from services.rules import apply_rule_to_existing, delete_rule, upsert_rule
 from services.transactions import distinct_categories, query_transactions
 from templating import templates
 
@@ -48,13 +50,25 @@ def recategorize(
     transaction_id: int,
     db: DbSession,
     category: Annotated[str, Form()] = "",
+    apply_to_merchant: Annotated[bool, Form()] = False,
 ):
     txn = db.get(Transaction, transaction_id)
     if txn is None:
         raise HTTPException(status_code=404, detail="Transaction not found")
+    new_category = category.strip() or None
     # Blank clears the override and falls back to Plaid's category.
-    txn.user_category = category.strip() or None
+    txn.user_category = new_category
     db.commit()
+
+    if apply_to_merchant:
+        key = txn.merchant_key or merchant_key(txn.merchant_name or txn.name)
+        if new_category:
+            upsert_rule(db, key, new_category)
+            apply_rule_to_existing(db, key, new_category)
+        else:
+            delete_rule(db, key)
+
+    db.refresh(txn)
     logger.info("Recategorized transaction %s -> %s", transaction_id, txn.effective_category)
     return templates.TemplateResponse(
         request, "_category_cell.html", {"txn": txn, "categories": distinct_categories(db)}

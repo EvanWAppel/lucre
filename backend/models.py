@@ -73,6 +73,8 @@ class Transaction(Base):
     amount: Mapped[float] = mapped_column(Float, nullable=False)
     plaid_category: Mapped[str | None] = mapped_column(String, nullable=True)
     user_category: Mapped[str | None] = mapped_column(String, nullable=True)
+    # Stable key derived from the merchant descriptor; links transactions to rules.
+    merchant_key: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     pending: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     account: Mapped["Account"] = relationship("Account", back_populates="transactions")
@@ -81,3 +83,13 @@ class Transaction(Base):
     def effective_category(self) -> str:
         """The user's manual override if set, else Plaid's category, else a sentinel."""
         return self.user_category or self.plaid_category or "Uncategorized"
+
+
+class MerchantRule(Base):
+    """A standing rule: every transaction from this merchant gets this category."""
+
+    __tablename__ = "merchant_rules"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    merchant_key: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
+    category: Mapped[str] = mapped_column(String, nullable=False)
