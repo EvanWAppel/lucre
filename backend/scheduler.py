@@ -8,14 +8,18 @@ logger = logging.getLogger(__name__)
 
 def run_daily_sync() -> None:
     # Imported here so building a scheduler never drags in DB/Plaid setup.
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
     from database import SessionLocal
     from plaid_client import get_plaid_client
-    from services.sync import sync_balances
+    from services.sync import run_full_sync
 
     logger.info("Daily sync starting")
+    today = datetime.now(ZoneInfo("America/New_York")).date()
     db = SessionLocal()
     try:
-        sync_balances(db, get_plaid_client())
+        run_full_sync(db, get_plaid_client(), today)
     finally:
         db.close()
 

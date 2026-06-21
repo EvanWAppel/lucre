@@ -142,13 +142,13 @@ synced daily. Smallest end-to-end proof of the whole pipeline.
       utility bill, gas-station noise that must NOT match.
 - [x] **D3** Price-increase rule: series' newest amount > 5% above its trailing median →
       flagged with old/new amounts. Pure + tested.
-- [ ] **D4** Persistence: `RecurringSeries` model (merchant_key, cadence, median_amount,
+- [x] **D4** Persistence: `RecurringSeries` model (merchant_key, cadence, median_amount,
       last_seen, next_expected, active, dismissed). Diff-and-upsert from detector output;
       newly seen series and price increases are recorded as rows in `AlertEvent` (see G1 —
       coordinate or stub). Tests: new series detected once, not re-flagged next sync.
-- [ ] **D5** Wire into daily sync after transactions ingest (needs C2). Integration test:
+- [x] **D5** Wire into daily sync after transactions ingest (needs C2). Integration test:
       sync of fixture history yields expected series.
-- [ ] **D6** Subscriptions page `GET /subscriptions`: active series with amount, cadence,
+- [x] **D6** Subscriptions page `GET /subscriptions`: active series with amount, cadence,
       next expected date, annualized cost total; "not a subscription" dismiss button
       (sets `dismissed`, excluded thereafter). Tests.
 
@@ -175,7 +175,7 @@ synced daily. Smallest end-to-end proof of the whole pipeline.
 
 ## Group G — Alerts & email (G1/G2/G5 can start after B6, parallel lane)
 
-- [ ] **G1** `AlertEvent` model: type, dedupe_key, payload JSON, created_at, emailed_at,
+- [x] **G1** `AlertEvent` model: type, dedupe_key, payload JSON, created_at, emailed_at,
       urgency. Dedupe: same key never recorded twice. Tests.
 - [ ] **G2** `AlertSettings` (singleton row: per-account low-balance thresholds, large-txn
       amount) + `GET /settings` page to edit them, plus password-change later. Tests.

@@ -1,14 +1,15 @@
 {% extends "base.html" %}
+{% block title %}Subscriptions — Lucre{% endblock %}
 {% block nav %}
 <nav>
+  <a href="/" class="nav-link">Dashboard</a>
   <a href="/transactions" class="nav-link">Transactions</a>
   <a href="/spending" class="nav-link">Spending</a>
-  <a href="/subscriptions" class="nav-link">Subscriptions</a>
-  <a href="/link" class="nav-link">＋ Connect</a>
 </nav>
 {% endblock %}
 {% block content %}
-<div id="accounts">
-  {% include "_accounts.html" %}
+<h1>Subscriptions</h1>
+<div id="subscriptions">
+  {% include "_subscriptions_list.html" %}
 </div>
 {% endblock %}

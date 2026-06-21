@@ -1,0 +1,23 @@
+{% if subscriptions %}
+<p class="spend-total">
+  Estimated annual cost: <strong>${{ annual_total | money }}</strong>
+</p>
+<ul class="subs">
+  {% for sub in subscriptions %}
+  <li class="sub">
+    <div class="sub-main">
+      <span class="sub-name">{{ sub.merchant_key }}</span>
+      <span class="sub-meta">{{ sub.cadence }} · next {{ sub.next_expected.strftime("%b %-d") }}</span>
+    </div>
+    <span class="sub-amount">${{ sub.median_amount | money }}</span>
+    <button class="dismiss"
+            hx-post="/api/subscriptions/{{ sub.id }}/dismiss"
+            hx-target="#subscriptions"
+            hx-swap="innerHTML"
+            title="Not a subscription">✕</button>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="muted">No subscriptions detected yet. They appear after a sync with enough history.</p>
+{% endif %}

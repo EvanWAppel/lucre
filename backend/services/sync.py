@@ -1,4 +1,5 @@
 import logging
+from datetime import date
 
 from sqlalchemy.orm import Session
 
@@ -136,3 +137,17 @@ def sync_transactions(db: Session, plaid: PlaidClientLike) -> dict:
         len(errors),
     )
     return {"added": added, "modified": modified, "removed": removed, "errors": errors}
+
+
+def run_full_sync(db: Session, plaid: PlaidClientLike, today: date) -> dict:
+    """The daily pipeline: refresh balances, ingest transactions, then re-detect
+    recurring series (which raises new-subscription and price-increase alerts)."""
+    # Imported here to avoid a module-load cycle (subscriptions imports nothing from
+    # sync, but keeping the edge lazy documents the run-order dependency).
+    from services.subscriptions import sync_recurring
+
+    balances = sync_balances(db, plaid)
+    transactions = sync_transactions(db, plaid)
+    recurring = sync_recurring(db, today)
+    logger.info("Full sync complete")
+    return {"balances": balances, "transactions": transactions, "recurring": recurring}

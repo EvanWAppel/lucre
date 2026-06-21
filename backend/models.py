@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import UTC, date, datetime
 
@@ -93,3 +94,40 @@ class MerchantRule(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     merchant_key: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
     category: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class RecurringSeries(Base):
+    """A detected recurring charge (subscription or bill), persisted across syncs."""
+
+    __tablename__ = "recurring_series"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    merchant_key: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
+    cadence: Mapped[str] = mapped_column(String, nullable=False)  # weekly | monthly | annual
+    median_amount: Mapped[float] = mapped_column(Float, nullable=False)
+    last_seen: Mapped[date] = mapped_column(Date, nullable=False)
+    next_expected: Mapped[date] = mapped_column(Date, nullable=False)
+    # active: still recurring (recently seen). dismissed: user said "not a subscription".
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    dismissed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+
+class AlertEvent(Base):
+    """A noteworthy event found during sync. dedupe_key makes recording idempotent;
+    urgency decides immediate email vs daily digest. emailed_at is set once sent."""
+
+    __tablename__ = "alert_events"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    type: Mapped[str] = mapped_column(String, nullable=False)
+    dedupe_key: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
+    payload: Mapped[str] = mapped_column(String, nullable=False, default="{}")
+    urgency: Mapped[str] = mapped_column(String, nullable=False)  # urgent | digest
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    emailed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    @property
+    def payload_data(self) -> dict:
+        return json.loads(self.payload)
