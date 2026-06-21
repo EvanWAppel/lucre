@@ -140,14 +140,22 @@ def sync_transactions(db: Session, plaid: PlaidClientLike) -> dict:
 
 
 def run_full_sync(db: Session, plaid: PlaidClientLike, today: date) -> dict:
-    """The daily pipeline: refresh balances, ingest transactions, then re-detect
-    recurring series (which raises new-subscription and price-increase alerts)."""
-    # Imported here to avoid a module-load cycle (subscriptions imports nothing from
-    # sync, but keeping the edge lazy documents the run-order dependency).
+    """The daily pipeline: refresh balances, snapshot them for net-worth history,
+    ingest transactions, then re-detect recurring series (which raises
+    new-subscription and price-increase alerts)."""
+    # Imported here to avoid a module-load cycle (these import nothing from sync, but
+    # keeping the edges lazy documents the run-order dependency).
+    from services.snapshots import write_snapshots
     from services.subscriptions import sync_recurring
 
     balances = sync_balances(db, plaid)
+    snapshots = write_snapshots(db, today)
     transactions = sync_transactions(db, plaid)
     recurring = sync_recurring(db, today)
     logger.info("Full sync complete")
-    return {"balances": balances, "transactions": transactions, "recurring": recurring}
+    return {
+        "balances": balances,
+        "snapshots": snapshots,
+        "transactions": transactions,
+        "recurring": recurring,
+    }

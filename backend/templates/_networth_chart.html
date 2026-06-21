@@ -1,0 +1,29 @@
+{# Net-worth sparkline; reloads itself when a range toggle is clicked. #}
+<div id="networth-chart" class="networth">
+  <div class="networth-head">
+    <span class="networth-label">Net worth</span>
+    <span class="networth-value">
+      {% if latest is not none %}${{ latest | money }}{% else %}—{% endif %}
+    </span>
+  </div>
+
+  {% if polyline %}
+  <svg viewBox="0 0 {{ width }} {{ height }}" preserveAspectRatio="none" class="sparkline">
+    <polyline points="{{ polyline }}" fill="none" stroke="var(--accent)" stroke-width="2" />
+  </svg>
+  {% else %}
+  <p class="muted">No history yet — it builds up daily.</p>
+  {% endif %}
+
+  <div class="range-toggles">
+    {% for r in ranges %}
+    <button
+      class="range {% if r == days %}active{% endif %}"
+      hx-get="/api/networth?days={{ r }}"
+      hx-target="#networth-chart"
+      hx-swap="outerHTML">
+      {{ r }}d
+    </button>
+    {% endfor %}
+  </div>
+</div>

@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import UTC, date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, String, func
+from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
@@ -94,6 +94,21 @@ class MerchantRule(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     merchant_key: Mapped[str] = mapped_column(String, unique=True, nullable=False, index=True)
     category: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class BalanceSnapshot(Base):
+    """One account's balance on one day. The daily sync writes these so net worth
+    can be charted over time."""
+
+    __tablename__ = "balance_snapshots"
+    __table_args__ = (UniqueConstraint("account_id", "date", name="uq_snapshot_account_date"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    account_id: Mapped[int] = mapped_column(ForeignKey("accounts.id"), nullable=False, index=True)
+    date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    balance: Mapped[float] = mapped_column(Float, nullable=False)
+
+    account: Mapped["Account"] = relationship("Account")
 
 
 class RecurringSeries(Base):

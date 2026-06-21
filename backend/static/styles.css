@@ -60,3 +60,12 @@ table.transactions td { padding: 0.5rem 0.25rem; border-bottom: 1px solid rgba(1
 .sub-amount { white-space: nowrap; }
 .dismiss { background: none; border: none; color: gray; font-size: 1rem; cursor: pointer; }
 .dismiss:hover { color: var(--danger); }
+
+.networth { margin: 1rem 0; }
+.networth-head { display: flex; justify-content: space-between; align-items: baseline; }
+.networth-label { color: gray; font-size: 0.85rem; }
+.networth-value { font-size: 1.3rem; font-weight: 700; }
+.sparkline { width: 100%; height: 60px; display: block; margin: 0.4rem 0; }
+.range-toggles { display: flex; gap: 0.4rem; }
+.range { background: none; border: 1px solid rgba(128,128,128,0.3); border-radius: 4px; padding: 0.2rem 0.5rem; font-size: 0.8rem; cursor: pointer; color: inherit; }
+.range.active { background: var(--accent); color: white; border-color: var(--accent); }

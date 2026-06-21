@@ -154,11 +154,11 @@ synced daily. Smallest end-to-end proof of the whole pipeline.
 
 ## Group E — Net worth (after B6; small lane, pairs well with C agent)
 
-- [ ] **E1** `BalanceSnapshot` model (account FK, date, balance; unique account+date).
+- [x] **E1** `BalanceSnapshot` model (account FK, date, balance; unique account+date).
       Daily sync writes one per account, idempotent on re-run. Tests.
-- [ ] **E2** Net-worth series service: per-day total (cash − credit), carrying forward the
+- [x] **E2** Net-worth series service: per-day total (cash − credit), carrying forward the
       latest snapshot for accounts missing that day. Pure + tested.
-- [ ] **E3** Dashboard chart: net-worth sparkline (30/90/365 toggles) — server-computed
+- [x] **E3** Dashboard chart: net-worth sparkline (30/90/365 toggles) — server-computed
       points, lightweight rendering (inline SVG fine). Test: correct points in response.
 
 ## Group F — Bills (after D4)

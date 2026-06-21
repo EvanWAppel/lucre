@@ -8,6 +8,9 @@
 </nav>
 {% endblock %}
 {% block content %}
+{% if cash_accounts or credit_accounts %}
+<div hx-get="/api/networth?days=90" hx-trigger="load" hx-swap="outerHTML"></div>
+{% endif %}
 <div id="accounts">
   {% include "_accounts.html" %}
 </div>
