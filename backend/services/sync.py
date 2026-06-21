@@ -1,5 +1,6 @@
 import logging
 from datetime import date
+from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Session
 
@@ -8,6 +9,9 @@ from models import Account, Item, Transaction
 from plaid_client import PlaidClientLike
 from services.merchants import merchant_key
 from services.rules import load_rules
+
+if TYPE_CHECKING:
+    from services.email import EmailClientLike
 
 logger = logging.getLogger(__name__)
 
@@ -139,12 +143,20 @@ def sync_transactions(db: Session, plaid: PlaidClientLike) -> dict:
     return {"added": added, "modified": modified, "removed": removed, "errors": errors}
 
 
-def run_full_sync(db: Session, plaid: PlaidClientLike, today: date) -> dict:
+def run_full_sync(
+    db: Session,
+    plaid: PlaidClientLike,
+    today: date,
+    email_client: "EmailClientLike | None" = None,
+) -> dict:
     """The daily pipeline: refresh balances, snapshot them for net-worth history,
-    ingest transactions, then re-detect recurring series (which raises
-    new-subscription and price-increase alerts)."""
+    ingest transactions, re-detect recurring series (raising new-subscription and
+    price-increase alerts), seed derived bills, then evaluate post-sync alert rules
+    (urgent ones email immediately via email_client)."""
     # Imported here to avoid a module-load cycle (these import nothing from sync, but
     # keeping the edges lazy documents the run-order dependency).
+    from services.alert_rules import run_post_sync_alerts
+    from services.bills import seed_derived_bills
     from services.snapshots import write_snapshots
     from services.subscriptions import sync_recurring
 
@@ -152,10 +164,14 @@ def run_full_sync(db: Session, plaid: PlaidClientLike, today: date) -> dict:
     snapshots = write_snapshots(db, today)
     transactions = sync_transactions(db, plaid)
     recurring = sync_recurring(db, today)
+    bills = seed_derived_bills(db, today)
+    alerts = run_post_sync_alerts(db, email_client, today)
     logger.info("Full sync complete")
     return {
         "balances": balances,
         "snapshots": snapshots,
         "transactions": transactions,
         "recurring": recurring,
+        "bills": bills,
+        "alerts": alerts,
     }

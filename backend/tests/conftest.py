@@ -162,17 +162,38 @@ def fake_plaid():
     return FakePlaidClient()
 
 
+class FakeEmailClient:
+    """Records sent emails instead of calling Resend. Set `fail = True` to simulate
+    a send failure (raises, as the real client does)."""
+
+    def __init__(self):
+        self.sent: list[tuple[str, str]] = []
+        self.fail = False
+
+    def send(self, subject: str, html: str) -> None:
+        if self.fail:
+            raise RuntimeError("simulated email failure")
+        self.sent.append((subject, html))
+
+
 @pytest.fixture
-def client(db_session, fake_plaid):
-    """TestClient with the test DB session and fake Plaid client injected."""
+def fake_email():
+    return FakeEmailClient()
+
+
+@pytest.fixture
+def client(db_session, fake_plaid, fake_email):
+    """TestClient with the test DB session and fake Plaid/email clients injected."""
     from main import app
     from plaid_client import get_plaid_client
+    from services.email import get_email_client
 
     def _get_test_db():
         yield db_session
 
     app.dependency_overrides[get_db] = _get_test_db
     app.dependency_overrides[get_plaid_client] = lambda: fake_plaid
+    app.dependency_overrides[get_email_client] = lambda: fake_email
     # https base_url so Secure session cookies are stored and sent by the test client.
     with TestClient(app, base_url="https://testserver") as test_client:
         yield test_client

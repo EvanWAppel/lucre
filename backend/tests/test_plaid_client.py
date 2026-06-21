@@ -2,6 +2,7 @@ from datetime import date
 
 from plaid_client import (
     PlaidClient,
+    build_link_token_request,
     get_plaid_client,
     normalize_accounts,
     normalize_transaction,
@@ -81,6 +82,16 @@ def test_normalize_transaction_handles_iso_date_string_and_null_category():
     assert result["date"] == date(2026, 6, 2)
     assert result["plaid_category"] is None
     assert result["merchant_name"] is None
+
+
+def test_link_token_request_includes_redirect_uri():
+    request = build_link_token_request("https://app.example.com/link")
+    assert request.to_dict()["redirect_uri"] == "https://app.example.com/link"
+
+
+def test_link_token_request_omits_redirect_uri_when_unset():
+    assert "redirect_uri" not in build_link_token_request(None).to_dict()
+    assert "redirect_uri" not in build_link_token_request("").to_dict()
 
 
 def test_get_plaid_client_returns_singleton():

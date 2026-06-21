@@ -39,6 +39,23 @@ class PlaidClientLike(Protocol):
     def transactions_sync(self, access_token: str, cursor: str | None) -> dict: ...
 
 
+def build_link_token_request(redirect_uri: str | None = None) -> LinkTokenCreateRequest:
+    """Build the /link/token/create request. A non-empty redirect_uri is included so
+    OAuth institutions (Chase et al.) can hand the browser back to /link; it must be
+    registered in the Plaid dashboard or Plaid rejects the request."""
+    kwargs = {
+        "user": LinkTokenCreateRequestUser(client_user_id="lucre-single-user"),
+        "client_name": "Lucre",
+        "products": [Products("transactions")],
+        "transactions": LinkTokenTransactions(days_requested=TRANSACTIONS_DAYS_REQUESTED),
+        "country_codes": [CountryCode("US")],
+        "language": "en",
+    }
+    if redirect_uri:
+        kwargs["redirect_uri"] = redirect_uri
+    return LinkTokenCreateRequest(**kwargs)
+
+
 def normalize_accounts(accounts: list[dict]) -> list[dict]:
     """Map Plaid's /accounts/get account dicts to our internal shape."""
     return [
@@ -83,14 +100,7 @@ class PlaidClient:
         self._api = plaid_api.PlaidApi(plaid.ApiClient(configuration))
 
     def create_link_token(self) -> str:
-        request = LinkTokenCreateRequest(
-            user=LinkTokenCreateRequestUser(client_user_id="lucre-single-user"),
-            client_name="Lucre",
-            products=[Products("transactions")],
-            transactions=LinkTokenTransactions(days_requested=TRANSACTIONS_DAYS_REQUESTED),
-            country_codes=[CountryCode("US")],
-            language="en",
-        )
+        request = build_link_token_request(settings.plaid_redirect_uri or None)
         response = self._api.link_token_create(request)
         return response["link_token"]
 

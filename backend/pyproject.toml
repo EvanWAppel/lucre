@@ -8,6 +8,7 @@ dependencies = [
     "argon2-cffi>=25.1.0",
     "cryptography>=48.0.0",
     "fastapi>=0.136.3",
+    "httpx>=0.28.1",
     "itsdangerous>=2.2.0",
     "jinja2>=3.1.6",
     "plaid-python>=28",

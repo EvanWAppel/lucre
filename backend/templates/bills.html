@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Bills — Lucre{% endblock %}
+{% block nav %}
+<nav>
+  <a href="/" class="nav-link">Dashboard</a>
+  <a href="/transactions" class="nav-link">Transactions</a>
+  <a href="/spending" class="nav-link">Spending</a>
+  <a href="/subscriptions" class="nav-link">Subscriptions</a>
+</nav>
+{% endblock %}
+{% block content %}
+<h1>Bills</h1>
+
+<h2>Next 30 days</h2>
+{% if upcoming %}
+<p class="spend-total">Total due: <strong>${{ total | money }}</strong></p>
+<ul class="bills">
+  {% for ub in upcoming %}
+  <li class="bill">
+    <div class="bill-main">
+      <span class="bill-due">{{ ub.due.strftime("%b %-d") }}</span>
+      <span class="bill-name">{{ ub.name }}</span>
+      <span class="bill-source badge badge-{{ ub.source }}">{{ ub.source }}</span>
+      {% if ub.autopay %}<span class="badge badge-autopay">autopay</span>{% endif %}
+    </div>
+    <span class="bill-amount">${{ ub.amount | money }}</span>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="muted">Nothing due in the next 30 days.</p>
+{% endif %}
+
+<h2>Manual bills</h2>
+{% if manual %}
+<ul class="bills">
+  {% for bill in manual %}
+  <li class="bill">
+    <div class="bill-main">
+      <span class="bill-name">{{ bill.effective_name }}</span>
+      <span class="sub-meta">{{ bill.effective_cadence }}</span>
+    </div>
+    <span class="bill-amount">${{ bill.effective_amount | money }}</span>
+    <a class="nav-link" href="/bills/{{ bill.id }}/edit">Edit</a>
+    <form method="post" action="/bills/{{ bill.id }}/delete" class="inline">
+      <button class="dismiss" title="Delete bill">✕</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="muted">No manual bills yet.</p>
+{% endif %}
+
+<p><a class="nav-link" href="/bills/new">+ Add a bill</a></p>
+{% endblock %}

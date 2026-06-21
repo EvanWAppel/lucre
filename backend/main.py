@@ -10,9 +10,11 @@ from database import init_db
 from logging_setup import setup_logging
 from routes import (
     auth_routes,
+    bills,
     networth,
     pages,
     plaid_link,
+    settings,
     spending,
     subscriptions,
     transactions,
@@ -50,6 +52,8 @@ def create_app() -> FastAPI:
     app.include_router(spending.router)
     app.include_router(subscriptions.router)
     app.include_router(networth.router)
+    app.include_router(bills.router)
+    app.include_router(settings.router)
 
     @app.get("/health")
     def health() -> dict[str, str]:

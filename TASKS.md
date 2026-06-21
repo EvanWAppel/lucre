@@ -99,7 +99,7 @@ synced daily. Smallest end-to-end proof of the whole pipeline.
 - [ ] **B12 [HUMAN]** Plaid production approved → flip `PLAID_ENV=production`, connect real
       checking/savings/credit accounts via `/link`.
 - [ ] **B13 [HUMAN]** Add PWA to phone home screen; confirm login survives a week.
-- [ ] **B15** OAuth institution support (needed for Chase and most major banks): register the
+- [x] **B15** OAuth institution support (needed for Chase and most major banks): register the
       deployed `https://<app>/link` URL as an allowed redirect URI in the Plaid dashboard
       **[HUMAN]**, pass `redirect_uri` in `create_link_token()`, and re-initialize Link with
       `received_redirect_uri` when the user lands back on `/link?oauth_state_id=...`.
@@ -163,13 +163,13 @@ synced daily. Smallest end-to-end proof of the whole pipeline.
 
 ## Group F — Bills (after D4)
 
-- [ ] **F1** `Bill` model: either derived (FK → RecurringSeries) or manual (name, amount,
+- [x] **F1** `Bill` model: either derived (FK → RecurringSeries) or manual (name, amount,
       cadence, next_due), with `due_day_override` and autopay flag. Tests.
-- [ ] **F2** Seed/refresh derived bills from active recurring series during sync; series
+- [x] **F2** Seed/refresh derived bills from active recurring series during sync; series
       dismissal hides its bill. Tests.
-- [ ] **F3** Manual bill CRUD: add/edit/delete pages for bills detection can't see (rent,
+- [x] **F3** Manual bill CRUD: add/edit/delete pages for bills detection can't see (rent,
       annual insurance). Tests.
-- [ ] **F4** Upcoming-bills view `GET /bills`: next-30-days list (date, name, expected amount,
+- [x] **F4** Upcoming-bills view `GET /bills`: next-30-days list (date, name, expected amount,
       source badge), monthly total. Due-date prediction honors overrides. Tests including
       month-boundary cases (due on the 31st, February).
 
@@ -177,17 +177,17 @@ synced daily. Smallest end-to-end proof of the whole pipeline.
 
 - [x] **G1** `AlertEvent` model: type, dedupe_key, payload JSON, created_at, emailed_at,
       urgency. Dedupe: same key never recorded twice. Tests.
-- [ ] **G2** `AlertSettings` (singleton row: per-account low-balance thresholds, large-txn
+- [x] **G2** `AlertSettings` (singleton row: per-account low-balance thresholds, large-txn
       amount) + `GET /settings` page to edit them, plus password-change later. Tests.
-- [ ] **G3** Post-sync rules: low balance (urgent) and large transaction (urgent) emit
+- [x] **G3** Post-sync rules: low balance (urgent) and large transaction (urgent) emit
       AlertEvents per G2 settings. Tests: fires once, respects thresholds, no repeat while
       balance stays low (dedupe by day).
-- [ ] **G4** Digest sources: new-subscription + price-increase events (from D4) and
+- [x] **G4** Digest sources: new-subscription + price-increase events (from D4) and
       bills due within 3 days (from F4) marked as digest urgency. Tests.
-- [ ] **G5** Email sender `backend/services/email.py`: Resend API wrapper (httpx), `send(subject,
+- [x] **G5** Email sender `backend/services/email.py`: Resend API wrapper (httpx), `send(subject,
       html)`; fake in tests; urgent events email immediately at creation. Failure logged
       loudly, never swallowed. Tests.
-- [ ] **G6** Daily digest: 07:30 scheduler job renders a Jinja email (yesterday's spend, new
+- [x] **G6** Daily digest: 07:30 scheduler job renders a Jinja email (yesterday's spend, new
       subscriptions, price increases, upcoming bills, current balances) from un-emailed
       digest events, marks them `emailed_at`. Tests: renders, marks, skips when empty.
 - [ ] **G7 [HUMAN]** Verify real digest + an urgent alert arrive in Gmail and look right on

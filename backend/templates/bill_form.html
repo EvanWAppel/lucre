@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{% if bill %}Edit bill{% else %}Add bill{% endif %} — Lucre{% endblock %}
+{% block nav %}
+<nav>
+  <a href="/bills" class="nav-link">Bills</a>
+</nav>
+{% endblock %}
+{% block content %}
+<h1>{% if bill %}Edit bill{% else %}Add a bill{% endif %}</h1>
+
+{% set action = "/bills/" ~ bill.id ~ "/edit" if bill else "/bills/new" %}
+{% set derived = bill and bill.is_derived %}
+<form method="post" action="{{ action }}" class="bill-form">
+  {% if derived %}
+  <p class="muted">{{ bill.effective_name }} is detected from your transactions; only the
+    due-day and autopay settings can be edited here.</p>
+  {% else %}
+  <label>Name
+    <input type="text" name="name" required value="{{ bill.name if bill else '' }}">
+  </label>
+  <label>Amount
+    <input type="number" name="amount" step="0.01" required
+           value="{{ bill.amount if bill else '' }}">
+  </label>
+  <label>Cadence
+    <select name="cadence">
+      {% for c in ["weekly", "monthly", "annual"] %}
+      <option value="{{ c }}" {% if bill and bill.cadence == c %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Next due
+    <input type="date" name="next_due" required
+           value="{{ bill.next_due.isoformat() if bill and bill.next_due else '' }}">
+  </label>
+  {% endif %}
+  <label>Due-day override (day of month, optional)
+    <input type="number" name="due_day_override" min="1" max="31"
+           value="{{ bill.due_day_override if bill and bill.due_day_override else '' }}">
+  </label>
+  <label class="checkbox">
+    <input type="checkbox" name="autopay" value="true"
+           {% if bill and bill.autopay %}checked{% endif %}> Autopay
+  </label>
+  <button type="submit">Save</button>
+  <a class="nav-link" href="/bills">Cancel</a>
+</form>
+{% endblock %}

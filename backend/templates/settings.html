@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Settings — Lucre{% endblock %}
+{% block nav %}
+<nav>
+  <a href="/" class="nav-link">Dashboard</a>
+  <a href="/bills" class="nav-link">Bills</a>
+</nav>
+{% endblock %}
+{% block content %}
+<h1>Alert settings</h1>
+
+<form method="post" action="/settings" class="settings-form">
+  <h2>Large transaction</h2>
+  <label>Alert when a transaction's amount exceeds (blank to disable)
+    <input type="number" name="large_transaction_amount" step="0.01" min="0"
+           value="{{ alert_settings.large_transaction_amount if alert_settings.large_transaction_amount is not none else '' }}">
+  </label>
+
+  <h2>Low balance thresholds</h2>
+  {% if cash_accounts %}
+  {% for account in cash_accounts %}
+  <label>{{ account.name }} (blank to disable)
+    <input type="number" name="low_balance_threshold_{{ account.id }}" step="0.01" min="0"
+           value="{{ account.low_balance_threshold if account.low_balance_threshold is not none else '' }}">
+  </label>
+  {% endfor %}
+  {% else %}
+  <p class="muted">No cash accounts connected yet.</p>
+  {% endif %}
+
+  <button type="submit">Save</button>
+</form>
+{% endblock %}

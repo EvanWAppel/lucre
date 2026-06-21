@@ -2,7 +2,17 @@ import json
 import logging
 from datetime import UTC, date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, String, UniqueConstraint, func
+from sqlalchemy import (
+    Boolean,
+    Date,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
@@ -46,6 +56,8 @@ class Account(Base):
     last_refreshed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # Per-account low-balance alert threshold; null means no low-balance alert.
+    low_balance_threshold: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     item: Mapped["Item"] = relationship("Item", back_populates="accounts")
     transactions: Mapped[list["Transaction"]] = relationship(
@@ -125,6 +137,79 @@ class RecurringSeries(Base):
     # active: still recurring (recently seen). dismissed: user said "not a subscription".
     active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     dismissed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+
+class Bill(Base):
+    """An upcoming obligation shown on the bills calendar.
+
+    A bill is either *derived* — linked to a detected RecurringSeries, with its
+    name/amount/cadence/due taken live from that series — or *manual*, where the
+    user fills those in for bills detection can't see (rent, annual insurance).
+    `due_day_override` pins a monthly bill to a day-of-month regardless of the
+    detected/entered date; `autopay` is informational.
+    """
+
+    __tablename__ = "bills"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    # Set for derived bills (one bill per series); null for manual bills.
+    recurring_series_id: Mapped[int | None] = mapped_column(
+        ForeignKey("recurring_series.id"), unique=True, nullable=True, index=True
+    )
+    # Manual-bill fields; null on derived bills (sourced from the series instead).
+    name: Mapped[str | None] = mapped_column(String, nullable=True)
+    amount: Mapped[float | None] = mapped_column(Float, nullable=True)
+    cadence: Mapped[str | None] = mapped_column(String, nullable=True)
+    next_due: Mapped[date | None] = mapped_column(Date, nullable=True)
+    due_day_override: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    autopay: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    series: Mapped["RecurringSeries | None"] = relationship("RecurringSeries")
+
+    @property
+    def is_derived(self) -> bool:
+        return self.recurring_series_id is not None
+
+    @property
+    def source(self) -> str:
+        return "derived" if self.is_derived else "manual"
+
+    @property
+    def effective_name(self) -> str:
+        if self.series is not None:
+            return self.series.merchant_key
+        return self.name or "Bill"
+
+    @property
+    def effective_amount(self) -> float | None:
+        if self.series is not None:
+            return self.series.median_amount
+        return self.amount
+
+    @property
+    def effective_cadence(self) -> str | None:
+        if self.series is not None:
+            return self.series.cadence
+        return self.cadence
+
+    @property
+    def base_due(self) -> date | None:
+        """The anchor date predictions roll forward from."""
+        if self.series is not None:
+            return self.series.next_expected
+        return self.next_due
+
+
+class AlertSettings(Base):
+    """Singleton (id=1) holding global alert configuration. Per-account low-balance
+    thresholds live on Account; this row holds settings with no natural home there."""
+
+    __tablename__ = "alert_settings"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    # A transaction whose absolute amount exceeds this raises an urgent alert; null
+    # disables the large-transaction alert entirely.
+    large_transaction_amount: Mapped[float | None] = mapped_column(Float, nullable=True)
 
 
 class AlertEvent(Base):

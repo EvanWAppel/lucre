@@ -8,12 +8,15 @@
 <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
 <script>
   const status = document.getElementById("link-status");
-  document.getElementById("link-button").addEventListener("click", async () => {
-    const tokenResponse = await fetch("/api/plaid/link_token", { method: "POST" });
-    const { link_token } = await tokenResponse.json();
-    const handler = Plaid.create({
-      token: link_token,
+  // Plaid OAuth banks redirect the browser away and back to /link?oauth_state_id=...
+  // The link token must survive that round-trip, so it's stashed here.
+  const TOKEN_KEY = "plaid_link_token";
+
+  function buildHandler(linkToken, receivedRedirectUri) {
+    const config = {
+      token: linkToken,
       onSuccess: async (public_token, metadata) => {
+        localStorage.removeItem(TOKEN_KEY);
         const response = await fetch("/api/plaid/exchange", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -29,8 +32,31 @@
           status.textContent = "Error: " + (detail.detail || response.status);
         }
       },
-    });
-    handler.open();
+      onExit: () => { localStorage.removeItem(TOKEN_KEY); },
+    };
+    if (receivedRedirectUri) {
+      config.receivedRedirectUri = receivedRedirectUri;
+    }
+    return Plaid.create(config);
+  }
+
+  // Returning from an OAuth bank: resume Link with the stored token + the full URL.
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("oauth_state_id")) {
+    const linkToken = localStorage.getItem(TOKEN_KEY);
+    if (linkToken) {
+      buildHandler(linkToken, window.location.href).open();
+    } else {
+      status.textContent = "Couldn't resume the bank connection. Please try again.";
+    }
+  }
+
+  // Fresh start: fetch a token, stash it (in case the bank uses OAuth), open Link.
+  document.getElementById("link-button").addEventListener("click", async () => {
+    const tokenResponse = await fetch("/api/plaid/link_token", { method: "POST" });
+    const { link_token } = await tokenResponse.json();
+    localStorage.setItem(TOKEN_KEY, link_token);
+    buildHandler(link_token, null).open();
   });
 </script>
 {% endblock %}

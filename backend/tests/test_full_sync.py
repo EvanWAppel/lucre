@@ -1,6 +1,6 @@
 from datetime import date, timedelta
 
-from models import Account, RecurringSeries, Transaction
+from models import Account, Bill, RecurringSeries, Transaction
 from services.sync import run_full_sync
 from tests.test_sync import make_item
 
@@ -37,3 +37,7 @@ def test_full_sync_runs_balances_transactions_and_recurring(db_session, fake_pla
     assert series.merchant_key == "netflix"
     assert result["recurring"]["detected"] == 1
     assert result["transactions"]["added"] == 6
+    # The detected, active series is seeded as a derived bill.
+    bill = db_session.query(Bill).one()
+    assert bill.recurring_series_id == series.id
+    assert result["bills"]["created"] == 1

@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     plaid_secret: str
     # Plaid retired the "development" environment in June 2024.
     plaid_env: Literal["sandbox", "production"] = "sandbox"
+    # OAuth redirect URI (e.g. https://<app>/link). Required for OAuth institutions
+    # like Chase; must be registered in the Plaid dashboard. Empty disables OAuth.
+    plaid_redirect_uri: str = ""
     database_url: str
     encryption_key: str
     app_password_hash: str

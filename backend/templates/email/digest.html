@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<body style="font-family: -apple-system, Helvetica, Arial, sans-serif; color: #1a1a1a;">
+  <h1 style="font-size: 20px;">Lucre daily digest</h1>
+
+  <h2 style="font-size: 16px;">Balances</h2>
+  <p>
+    Cash ${{ ctx.cash_total | money }} ·
+    Credit ${{ ctx.credit_total | money }} ·
+    <strong>Net ${{ ctx.net_total | money }}</strong>
+  </p>
+  <p>Yesterday's spend: <strong>${{ ctx.yesterday_spend | money }}</strong></p>
+
+  {% if ctx.new_subscriptions %}
+  <h2 style="font-size: 16px;">New subscriptions</h2>
+  <ul>
+    {% for e in ctx.new_subscriptions %}
+    <li>{{ e.payload_data.merchant_key }} — ${{ e.payload_data.amount | money }}
+      ({{ e.payload_data.cadence }})</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if ctx.price_increases %}
+  <h2 style="font-size: 16px;">Price increases</h2>
+  <ul>
+    {% for e in ctx.price_increases %}
+    <li>{{ e.payload_data.merchant_key }}:
+      ${{ e.payload_data.old_amount | money }} → ${{ e.payload_data.new_amount | money }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if ctx.upcoming %}
+  <h2 style="font-size: 16px;">Upcoming bills</h2>
+  <ul>
+    {% for b in ctx.upcoming %}
+    <li>{{ b.due.strftime("%b %-d") }} — {{ b.name }} ${{ b.amount | money }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</body>
+</html>
