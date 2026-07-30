@@ -4,21 +4,49 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>{% block title %}Lucre{% endblock %}</title>
+  {% if noindex|default(false) or request.state.role != 'demo' %}
+  <meta name="robots" content="noindex">
+  {% endif %}
   <link rel="manifest" href="/static/manifest.json">
   <link rel="apple-touch-icon" href="/static/icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#14532d">
+  <meta name="theme-color" content="#0f3d2e">
   <link rel="stylesheet" href="/static/styles.css">
   <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
 </head>
 <body>
+  {% set is_demo = request.state.role == 'demo' %}
   <header class="topbar">
-    <a href="/" class="brand">Lucre</a>
+    <a href="{% if is_demo %}/{% else %}/dashboard{% endif %}" class="brand">
+      <img src="/static/lucre.svg" alt="" class="brand-logo" width="24" height="24">
+      <span>Lucre</span>
+    </a>
     {% block nav %}{% endblock %}
+    <div class="topbar-right">
+      {% if is_demo %}
+        <a href="/login" class="nav-link signin">Sign in</a>
+      {% else %}
+        <form method="post" action="/logout" class="logout-form">
+          <button type="submit" class="linklike">Sign out</button>
+        </form>
+      {% endif %}
+    </div>
   </header>
+
+  {% if is_demo and not hide_banner|default(false) %}
+  <div class="demo-banner" role="note">
+    <span><strong>Demo</strong> — this is generated, fake data.</span>
+    <span class="demo-banner-links">
+      <a href="/about">About this project</a>
+      <a href="{{ site.github_url }}" target="_blank" rel="noopener">Code</a>
+    </span>
+  </div>
+  {% endif %}
+
   <main>
     {% block content %}{% endblock %}
   </main>
+
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/static/sw.js");

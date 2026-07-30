@@ -1,6 +1,7 @@
 # Lucre — Task Board
 
-Implements [DESIGN.md](DESIGN.md). Check off tasks as they complete.
+Implements [DESIGN.md](DESIGN.md) (core app) and [PRD.md](PRD.md) (demo mode /
+recruiter showcase — **Group H**). Check off tasks as they complete.
 
 ## Conventions (apply to every task)
 
@@ -19,12 +20,29 @@ Implements [DESIGN.md](DESIGN.md). Check off tasks as they complete.
 A (foundation) ──► B (vertical slice) ──┬─► C (transactions) ──► D (recurring) ──► F (bills)
                                         ├─► E (net worth)                          │
                                         └─► G1/G2/G5 (alert core) ◄── D5, F4 ──────┘
+                                                       │
+   (C·D·E·F·G all shipped) ───────────────────────────┴──► H (demo & showcase)
+
+   H1 (role) ─► H2 (per-session store) ─► H4 (routing guard) ──┐   ◄─ H3 (seed) feeds H2/H8/H9
+                                                               ├─► H6  intro/launch
+                                                               ├─► H7  demo banner
+                                                               ├─► H8  simulated connect  (needs C/E data)
+                                                               ├─► H9  email preview       (needs G)
+                                                               ├─► H10 About + identity
+                                                               └─► H11 owner sign-in
+                          H5 (lifecycle/limits) ┘
+   (surfaces done) ──► H12 safety sweep ─► H13 polish ─► H14 isolation test ─► H15 exposure
 ```
 
 Parallelization: **A** first (quick, mostly sequential). **B** is the critical path — one
 agent drives it end-to-end. Once B6 lands, **C**, **E**, and **G** lanes can each be taken
 by a separate agent. **D2–D4** are pure functions with no model dependencies and can be
-built by another agent *anytime after A4*. **F** needs D's models.
+built by another agent *anytime after A4*. **F** needs D's models. **H** comes last: it
+showcases features that must already work. Within H, the isolation core is sequential
+(**H1 → H2 → H4**, with **H3** seed and **H5** limits buildable in parallel); once the guard
+lands, the surface tasks **H6–H11** can be split across agents, then **H12–H15** close out
+safety, polish, and exposure. **H4 and H14 are security-critical** — no demo session may ever
+reach the real DB, Plaid, or email.
 
 ---
 
@@ -192,3 +210,70 @@ synced daily. Smallest end-to-end proof of the whole pipeline.
       digest events, marks them `emailed_at`. Tests: renders, marks, skips when empty.
 - [ ] **G7 [HUMAN]** Verify real digest + an urgent alert arrive in Gmail and look right on
       the phone.
+
+## Group H — Demo mode & recruiter showcase (after the app works end-to-end)
+
+Implements [PRD.md](PRD.md): one deployment that is both a public, recruiter-facing
+showcase (sandboxed demo, fake data, no login) and Evan's private finance tracker.
+Most of H depends on the relevant feature existing first (a screen must work before
+it can be demoed/polished); the session/store/isolation core (H1–H4) comes first
+within the group. **The load-bearing requirement is isolation: a demo session must
+never read or write the real tables, call Plaid, or send email — H4 + H14 prove it.**
+
+- [x] **H1** Session role: extend the auth/session layer so every request resolves a
+      role — `owner` (authenticated, as today) or `anonymous`/`demo` (no login). Helpers
+      `is_demo()` / `is_owner()` available to handlers and templates. Tests: anonymous
+      request is `demo`, authenticated is `owner`.
+- [x] **H2** Per-session demo store: provision an ephemeral, per-demo-session SQLite
+      (`:memory:` or temp file copied from a seed template), keyed by the demo session id,
+      torn down on idle/expiry. Tests: two demo sessions get independent data; expiry frees
+      the store.
+- [x] **H3** Seed generator `backend/services/demo_seed.py`: deterministic-but-current fake
+      dataset per the PRD narrative — plausible salary + checking/savings/2 cards, ~6 months
+      history, steady net-worth growth, varied spend categories, monthly **and** annual
+      subscriptions, and deliberate triggers (a new subscription, a price increase, a
+      low-balance moment, a large transaction). Pure builder over the existing models. Tests:
+      detection + alert rules fire on the seed (new sub, price increase, low balance, large
+      txn all present).
+- [x] **H4** Data-layer routing + guard (**security-critical**): the DB dependency selects the
+      backing store from the session role; there is no code path where a demo session resolves
+      to the real DB. Tests: a demo session's reads/writes hit only its store; assert the real
+      DB file is never opened for write under a demo session.
+- [x] **H5** Demo lifecycle & limits: idle TTL for demo sessions, a global cap on concurrent
+      demo stores, and rate limiting on demo-session creation + demo write actions. Tests:
+      session resets after TTL; creation past the cap is refused gracefully.
+- [x] **H6** Intro / launch screen `GET /` (anonymous): one-screen framing (what Lucre is +
+      why), compact stack summary, **"Launch demo"** button, links to GitHub and `/about`. Held
+      to the H13 polish bar. Test: renders with the demo CTA for anonymous, skipped for owner
+      (owner lands on the real dashboard).
+- [x] **H7** Demo context banner: slim persistent "Demo — this is fake data" bar shown only in
+      demo sessions, linking to intro/About and GitHub. Test: present for demo, absent for owner.
+- [x] **H8** Simulated bank-connect flow: a "Connect a bank" action in demo opens a convincing
+      mock institution-picker / Link experience and, on "completion", makes new accounts +
+      transactions appear in the visitor's sandbox as if a sync ran. **No Plaid call.** Tests:
+      the demo connect path never touches `plaid_client`; new seeded accounts appear afterward.
+- [x] **H9** In-app email/alert preview `GET /alerts/preview`: renders exactly what the daily
+      digest + urgent-alert emails look like, populated from the (seed) data, never sending.
+      Reachable in demo as a showcase screen. Test: preview renders digest + urgent layouts.
+- [x] **H10** About / Architecture page `GET /about` (public): architecture diagram, key
+      decisions/tradeoffs distilled from DESIGN.md + the demo-isolation design, and an identity
+      block — "Built by Evan Appel" + tagline, GitHub, LinkedIn, resume/contact. Test: page
+      renders with the identity links.
+- [x] **H11** Discreet owner access: a small "Sign in" link → `/login`; owner's phone PWA opens
+      straight to the authenticated real dashboard. Test: link present, `/login` reachable,
+      authenticated root shows the real app not the intro.
+- [x] **H12** Demo safety sweep: ensure demo sessions cannot send email (H9 preview only) or
+      call Plaid (real Link/sync are owner-gated). Tests: email sender and `plaid_client` are
+      never invoked under a demo session across the demo-reachable routes.
+- [x] **H13** Visual-polish pass (graded — see PRD §7): consistent type/spacing/color system,
+      Lucre logo in header/intro, full mobile↔desktop responsiveness, dark mode (system pref),
+      styled legible charts, themed PWA install. Acceptance: no horizontal scroll on mobile,
+      mobile-sized tap targets, no debug/placeholder content on any recruiter-reachable surface.
+- [x] **H14** Isolation integration test (**security-critical**): drive the full demo flow via
+      TestClient (launch → edit → simulated connect → preview) and assert the real DB is
+      untouched and no real rows are ever served to a demo session.
+- [x] **H15** Public exposure: make the demo indexable (sitemap/robots allow), add `noindex` on
+      `/login` and owner-only views, confirm rate limits from H5 are live. Put the deployed URL
+      on resume/LinkedIn. **[HUMAN]** for the resume/LinkedIn edits.
+- [x] **H16 [HUMAN]** Host the resume PDF (in-repo asset vs external link — PRD §10) and wire it
+      into the About page identity block.

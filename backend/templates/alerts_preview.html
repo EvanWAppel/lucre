@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Alerts &amp; email — Lucre{% endblock %}
+{% block nav %}{% include "_nav.html" %}{% endblock %}
+{% block content %}
+<section>
+  <h1>Alerts &amp; email</h1>
+  <p class="muted">
+    Lucre emails me the moment something needs attention, and a short digest each
+    morning. Here's exactly what those look like, rendered from this data —
+    nothing is ever actually sent from the demo.
+  </p>
+</section>
+
+<section class="card">
+  <h2 class="card-title">Urgent — emailed immediately</h2>
+  {% if urgent_events %}
+  <ul class="email-list">
+    {% for e in urgent_events %}
+    <li class="email-card">
+      {% if e.type == 'low_balance' %}
+      <div class="email-subject">Low balance: {{ e.payload_data.account_name }}</div>
+      <div class="email-body">
+        {{ e.payload_data.account_name }} is at ${{ e.payload_data.balance | money }},
+        below your ${{ e.payload_data.threshold | money }} threshold.
+      </div>
+      {% elif e.type == 'large_transaction' %}
+      <div class="email-subject">
+        Large transaction: ${{ e.payload_data.amount | abs | money }} {{ e.payload_data.name }}
+      </div>
+      <div class="email-body">
+        {{ e.payload_data.date }}: ${{ e.payload_data.amount | abs | money }}
+        at {{ e.payload_data.name }}.
+      </div>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">No urgent alerts right now.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2 class="card-title">Daily digest</h2>
+  {% if has_digest %}
+  <iframe class="email-frame" srcdoc="{{ digest_html | e }}" title="Daily digest email preview"></iframe>
+  {% else %}
+  <p class="muted">Nothing pending for the digest.</p>
+  {% endif %}
+</section>
+{% endblock %}

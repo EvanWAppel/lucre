@@ -1,10 +1,14 @@
 import logging
 from collections.abc import Generator
+from typing import Annotated
 
+from fastapi import Depends, Request
 from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
+from auth import SessionRole
 from config import settings
+from services.demo_store import DemoStoreManager, get_demo_store_manager
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +41,29 @@ class Base(DeclarativeBase):
     pass
 
 
-def get_db() -> Generator[Session, None, None]:
-    db = SessionLocal()
+def session_for_request(
+    role: SessionRole, demo_session_id: str | None, demo_manager: DemoStoreManager
+) -> Session:
+    """Pick the backing store from the session role. This is the single choke point
+    that keeps demo traffic off the real database: an OWNER gets the real
+    SessionLocal; everyone else gets their throwaway per-session demo store, which
+    can never reach the owner's tables."""
+    if role is SessionRole.OWNER:
+        return SessionLocal()
+    if demo_session_id is None:
+        raise RuntimeError("demo request reached the data layer without a demo session id")
+    return demo_manager.get_or_create(demo_session_id).session_factory()
+
+
+def get_db(
+    request: Request,
+    demo_manager: Annotated[DemoStoreManager, Depends(get_demo_store_manager)],
+) -> Generator[Session, None, None]:
+    # The demo-session middleware sets these; default to OWNER so any non-HTTP or
+    # mis-wired caller fails closed onto the real DB only when truly authenticated.
+    role: SessionRole = getattr(request.state, "role", SessionRole.OWNER)
+    demo_session_id: str | None = getattr(request.state, "demo_session_id", None)
+    db = session_for_request(role, demo_session_id, demo_manager)
     try:
         yield db
     except Exception:

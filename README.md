@@ -1,8 +1,12 @@
 # Lucre
 
 Single-user personal finance PWA — balances, net worth, subscriptions, spending,
-and bill alerts. Design decisions live in [DESIGN.md](DESIGN.md); the task board
-is [TASKS.md](TASKS.md).
+and bill alerts. It doubles as a **portfolio piece**: the same deployment serves a
+public, sandboxed **demo mode** (fake data, no login) that recruiters can click
+through, while the owner's real finances stay private behind login.
+
+Design decisions live in [DESIGN.md](DESIGN.md); the recruiter-showcase / demo-mode
+requirements live in [PRD.md](PRD.md); the task board is [TASKS.md](TASKS.md).
 
 ## Stack
 

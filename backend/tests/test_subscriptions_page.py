@@ -61,8 +61,8 @@ def test_annualized_total_across_cadences():
     assert annualized_total([weekly, monthly, annual]) == 820.0
 
 
-def test_subscriptions_page_requires_login(client):
-    assert client.get("/subscriptions", follow_redirects=False).status_code == 303
+def test_subscriptions_page_open_to_demo(client):
+    assert client.get("/subscriptions", follow_redirects=False).status_code == 200
 
 
 def test_subscriptions_page_renders(client, db_session):

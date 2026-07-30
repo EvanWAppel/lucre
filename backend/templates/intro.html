@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Lucre — a personal finance app I built and use{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">Personal finance · built &amp; self-hosted</p>
+  <h1 class="hero-title">A finance app I actually use — on my phone, every day.</h1>
+  <p class="hero-sub">
+    Lucre tracks my real balances, net worth, subscriptions and bills behind a private
+    login. What you're about to open is a full, working copy running on generated fake
+    data — so you can click through everything without seeing anyone's money.
+  </p>
+
+  <div class="hero-cta">
+    <a href="/dashboard" class="btn btn-primary">Launch the demo →</a>
+    <a href="/about" class="btn btn-ghost">How it's built</a>
+    <a href="{{ site.github_url }}" class="btn btn-ghost" target="_blank" rel="noopener">View the code</a>
+  </div>
+
+  <ul class="stack-badges" aria-label="Built with">
+    <li>FastAPI</li><li>HTMX</li><li>SQLite + Litestream</li>
+    <li>Plaid</li><li>PWA</li><li>Railway</li>
+  </ul>
+</section>
+
+<section class="cards-2">
+  <article class="card">
+    <h2 class="card-title">What you can do in the demo</h2>
+    <ul class="ticks">
+      <li>See every balance and net worth trending over ~6 months</li>
+      <li>Watch subscription detection catch a <em>new</em> charge and a price hike</li>
+      <li>Browse spending by category; recategorize a transaction</li>
+      <li>Preview the daily digest &amp; alert emails it sends me</li>
+    </ul>
+  </article>
+  <article class="card">
+    <h2 class="card-title">Why it's interesting to build</h2>
+    <ul class="ticks">
+      <li><strong>Real pipeline:</strong> Plaid → SQLite → continuous backup to R2</li>
+      <li><strong>One service:</strong> FastAPI rendering server-side HTML + HTMX, no SPA</li>
+      <li><strong>Demo isolation:</strong> each visitor gets a throwaway sandbox that
+        can never touch my real data</li>
+      <li><strong>Scoped on purpose:</strong> decisions &amp; non-goals written down first</li>
+    </ul>
+  </article>
+</section>
+
+<p class="hero-foot">
+  Built by <strong>{{ site.owner_name }}</strong> ·
+  <a href="/about">About</a> ·
+  <a href="{{ site.github_url }}" target="_blank" rel="noopener">GitHub</a> ·
+  <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener">LinkedIn</a>
+</p>
+{% endblock %}

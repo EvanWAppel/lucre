@@ -2,6 +2,7 @@ import logging
 import time
 from collections import deque
 from collections.abc import Callable
+from enum import StrEnum
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
@@ -14,6 +15,12 @@ logger = logging.getLogger(__name__)
 
 SESSION_COOKIE = "lucre_session"
 SESSION_MAX_AGE_SECONDS = 365 * 24 * 3600
+
+# Identifies an anonymous visitor's ephemeral demo sandbox (keys its per-session
+# store). Not a security boundary — it grants access to nothing but throwaway fake
+# data — so it is unsigned. Short-lived; the store is reclaimed on idle anyway.
+DEMO_COOKIE = "lucre_demo"
+DEMO_MAX_AGE_SECONDS = 6 * 3600
 
 _hasher = PasswordHasher()
 
@@ -81,3 +88,28 @@ def require_login(request: Request) -> None:
     token = request.cookies.get(SESSION_COOKIE)
     if not token or not session_token_valid(token):
         raise HTTPException(status_code=303, headers={"Location": "/login"})
+
+
+class SessionRole(StrEnum):
+    """Every request is one of these. There is no accounts table — `owner` means a
+    valid owner session cookie is present; everyone else is a sandboxed `demo`."""
+
+    OWNER = "owner"
+    DEMO = "demo"
+
+
+def current_role(request: Request) -> SessionRole:
+    """Resolve the session role from the request. Usable directly or as a FastAPI
+    dependency. A valid owner session cookie → OWNER; anything else → DEMO."""
+    token = request.cookies.get(SESSION_COOKIE)
+    if token and session_token_valid(token):
+        return SessionRole.OWNER
+    return SessionRole.DEMO
+
+
+def is_owner(request: Request) -> bool:
+    return current_role(request) is SessionRole.OWNER
+
+
+def is_demo(request: Request) -> bool:
+    return current_role(request) is SessionRole.DEMO

@@ -69,8 +69,8 @@ def test_spending_filters_by_month(db_session, fake_plaid):
     assert summary.total == 10.0
 
 
-def test_spending_page_requires_login(client):
-    assert client.get("/spending", follow_redirects=False).status_code == 303
+def test_spending_page_open_to_demo(client):
+    assert client.get("/spending", follow_redirects=False).status_code == 200
 
 
 def test_spending_page_renders(client, db_session, fake_plaid):
