@@ -70,8 +70,8 @@ def test_upcoming_excludes_dismissed_derived_bill(db_session):
 # --- page + CRUD routes ---
 
 
-def test_bills_page_requires_login(client):
-    assert client.get("/bills", follow_redirects=False).status_code == 303
+def test_bills_page_open_to_demo(client):
+    assert client.get("/bills", follow_redirects=False).status_code == 200
 
 
 def test_bills_page_renders_with_badge(client, db_session):

@@ -61,6 +61,17 @@ def reset_login_rate_limiter():
     login_rate_limiter.reset()
 
 
+@pytest.fixture(autouse=True)
+def reset_demo_limiters():
+    import demo_limits
+
+    demo_limits.create_limiter.reset()
+    demo_limits.write_limiter.reset()
+    yield
+    demo_limits.create_limiter.reset()
+    demo_limits.write_limiter.reset()
+
+
 @pytest.fixture
 def override_settings(monkeypatch):
     """Temporarily override attributes on the global settings object."""

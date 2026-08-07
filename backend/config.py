@@ -27,7 +27,11 @@ class Settings(BaseSettings):
     alert_from_email: str = ""
     alert_to_email: str = ""
 
-    model_config = SettingsConfigDict(env_file=str(_ENV_FILE), env_file_encoding="utf-8")
+    # extra="ignore": deployment env vars (Litestream R2 keys, platform-injected
+    # vars) live alongside ours in the environment; don't reject them.
+    model_config = SettingsConfigDict(
+        env_file=str(_ENV_FILE), env_file_encoding="utf-8", extra="ignore"
+    )
 
 
 # Populated from the environment / .env file at import time.

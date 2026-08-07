@@ -1,0 +1,11 @@
+{% set is_demo = request.state.role == 'demo' %}
+<nav>
+  <a href="/dashboard" class="nav-link">Dashboard</a>
+  <a href="/transactions" class="nav-link">Transactions</a>
+  <a href="/spending" class="nav-link">Spending</a>
+  <a href="/subscriptions" class="nav-link">Subscriptions</a>
+  <a href="/bills" class="nav-link">Bills</a>
+  <a href="/alerts/preview" class="nav-link">Alerts</a>
+  <a href="/settings" class="nav-link">Settings</a>
+  <a href="{% if is_demo %}/demo/connect{% else %}/link{% endif %}" class="nav-link">＋ Connect</a>
+</nav>

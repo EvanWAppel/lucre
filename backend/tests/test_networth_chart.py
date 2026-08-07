@@ -25,8 +25,8 @@ def test_sparkline_single_point():
     assert sparkline_points([42.0], width=100, height=100) == [(0.0, 50.0)]
 
 
-def test_networth_chart_requires_login(client):
-    assert client.get("/api/networth", follow_redirects=False).status_code == 303
+def test_networth_chart_open_to_demo(client):
+    assert client.get("/api/networth", follow_redirects=False).status_code == 200
 
 
 def test_networth_chart_renders_points(client, db_session):

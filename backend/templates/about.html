@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}About — Lucre by {{ site.owner_name }}{% endblock %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">About this project</p>
+  <h1 class="hero-title">Lucre</h1>
+  <p class="hero-sub">
+    A personal finance app I designed, built, and actually use on my phone — and a
+    deliberately small showcase of how I work: real data pipeline, decisions written
+    down first, and a public demo that can never touch my real money.
+  </p>
+  <div class="hero-cta">
+    <a href="/dashboard" class="btn btn-primary">Open the demo →</a>
+    <a href="{{ site.github_url }}" class="btn btn-ghost" target="_blank" rel="noopener">View the code</a>
+  </div>
+</section>
+
+<section class="card about-identity">
+  <h2 class="card-title">Built by {{ site.owner_name }}</h2>
+  <p class="muted">{{ site.tagline }}</p>
+  <div class="links-row">
+    <a href="{{ site.github_url }}" class="btn btn-ghost" target="_blank" rel="noopener">GitHub</a>
+    <a href="{{ site.linkedin_url }}" class="btn btn-ghost" target="_blank" rel="noopener">LinkedIn</a>
+    <a href="{{ site.resume_url }}" class="btn btn-ghost" target="_blank" rel="noopener">Résumé (PDF)</a>
+    <a href="mailto:{{ site.contact_email }}" class="btn btn-ghost">Email</a>
+  </div>
+</section>
+
+<section class="card">
+  <h2 class="card-title">How the data flows</h2>
+  <div class="pipeline" aria-hidden="true">
+    <span class="pipe-step">Plaid</span><span class="pipe-arrow">→</span>
+    <span class="pipe-step">Daily sync</span><span class="pipe-arrow">→</span>
+    <span class="pipe-step">SQLite</span><span class="pipe-arrow">→</span>
+    <span class="pipe-step">Litestream</span><span class="pipe-arrow">→</span>
+    <span class="pipe-step">R2 backup</span>
+  </div>
+  <ul class="ticks">
+    <li><strong>One service:</strong> a single FastAPI app renders server-side HTML with
+      HTMX and installs as a PWA — no separate frontend, no SPA build.</li>
+    <li><strong>Real bank data:</strong> Plaid in production; a daily job pulls balances
+      and transactions via cursor-based sync.</li>
+    <li><strong>Durable + cheap:</strong> SQLite on a volume, continuously replicated to
+      Cloudflare R2 with Litestream. Restore is one command.</li>
+    <li><strong>In-house logic:</strong> recurring-charge detection, net-worth history,
+      and the bill calendar are computed from raw transactions, not bought.</li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2 class="card-title">The interesting part: a public demo that can't leak</h2>
+  <p class="muted">
+    This site is both my private tracker and a thing recruiters can click through. Those
+    goals fight each other, so the demo is isolated by construction:
+  </p>
+  <div class="pipeline" aria-hidden="true">
+    <span class="pipe-step">Request</span><span class="pipe-arrow">→</span>
+    <span class="pipe-step">role?</span><span class="pipe-arrow">→</span>
+    <span class="pipe-step pipe-owner">owner → real DB</span>
+    <span class="pipe-step pipe-demo">visitor → throwaway sandbox</span>
+  </div>
+  <ul class="ticks">
+    <li>Every anonymous visitor gets their own in-memory SQLite, seeded with realistic
+      fake data, torn down when they leave.</li>
+    <li>A single routing guard picks the backing store from the session role — there is
+      no code path where a demo request reaches my real tables, Plaid, or email.</li>
+    <li>Rate limits and an LRU cap keep anonymous traffic from exhausting the host.</li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2 class="card-title">Scoped on purpose</h2>
+  <p class="muted">
+    Lucre does four jobs well — balances &amp; net worth, subscription detection, spending
+    by category, and bills &amp; alerts. I wrote down what I was <em>not</em> building
+    (budgets/envelopes, investments, multi-user, bill negotiation) before starting, so the
+    first version could actually ship.
+  </p>
+  <p class="muted">
+    The decision log and task board live in the repo:
+    <a href="{{ site.github_url }}" target="_blank" rel="noopener">DESIGN.md, PRD.md, TASKS.md</a>.
+  </p>
+  <ul class="stack-badges">
+    <li>Python</li><li>FastAPI</li><li>HTMX</li><li>Jinja2</li><li>SQLite</li>
+    <li>Litestream</li><li>Plaid</li><li>Resend</li><li>Railway</li><li>pytest</li>
+  </ul>
+</section>
+
+<p class="hero-foot">
+  Built by <strong>{{ site.owner_name }}</strong> ·
+  <a href="{{ site.github_url }}" target="_blank" rel="noopener">GitHub</a> ·
+  <a href="{{ site.linkedin_url }}" target="_blank" rel="noopener">LinkedIn</a> ·
+  <a href="mailto:{{ site.contact_email }}">{{ site.contact_email }}</a>
+</p>
+{% endblock %}

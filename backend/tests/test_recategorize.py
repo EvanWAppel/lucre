@@ -7,7 +7,8 @@ def login(client) -> None:
     client.post("/login", data={"password": TEST_PASSWORD})
 
 
-def test_recategorize_requires_login(client, db_session, fake_plaid):
+def test_recategorize_open_to_demo(client, db_session, fake_plaid):
+    # Recategorizing is a demo-permitted interaction (it writes to the sandbox).
     checking, _ = seed(db_session, fake_plaid)
     txn = add_txn(db_session, checking, "t-1", 15, "A", 10.0, plaid_cat="FOOD_AND_DRINK")
     response = client.patch(
@@ -15,7 +16,7 @@ def test_recategorize_requires_login(client, db_session, fake_plaid):
         data={"category": "Groceries"},
         follow_redirects=False,
     )
-    assert response.status_code == 303
+    assert response.status_code == 200
 
 
 def test_recategorize_sets_user_category(client, db_session, fake_plaid):

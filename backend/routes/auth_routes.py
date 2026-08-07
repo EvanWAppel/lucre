@@ -25,7 +25,7 @@ def login_page(request: Request):
     token = request.cookies.get(SESSION_COOKIE)
     if token and session_token_valid(token):
         return RedirectResponse("/", status_code=303)
-    return templates.TemplateResponse(request, "login.html")
+    return templates.TemplateResponse(request, "login.html", {"noindex": True})
 
 
 @router.post("/login")

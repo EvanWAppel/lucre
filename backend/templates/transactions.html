@@ -1,11 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Transactions — Lucre{% endblock %}
-{% block nav %}
-<nav>
-  <a href="/" class="nav-link">Dashboard</a>
-  <a href="/spending" class="nav-link">Spending</a>
-</nav>
-{% endblock %}
+{% block nav %}{% include "_nav.html" %}{% endblock %}
 {% block content %}
 <h1>Transactions</h1>
 

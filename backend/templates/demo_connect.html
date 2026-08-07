@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Connect a bank — Lucre demo{% endblock %}
+{% block content %}
+<section class="card connect-card">
+  <h1 class="card-title">Connect a bank</h1>
+  <p class="muted">
+    Pick an institution to add it to your demo. This is a <strong>simulated</strong>
+    connection — no real bank, no credentials, no Plaid call. In the real app this is
+    the Plaid Link flow.
+  </p>
+  <form method="post" action="/demo/connect" class="bank-list">
+    {% for bank in banks %}
+    <button type="submit" name="institution" value="{{ bank }}" class="bank-option">
+      <span class="bank-dot" aria-hidden="true"></span>
+      <span>{{ bank }}</span>
+      <span class="bank-go">Connect →</span>
+    </button>
+    {% endfor %}
+  </form>
+  <p class="muted"><a href="/dashboard">← Back to the demo</a></p>
+</section>
+{% endblock %}

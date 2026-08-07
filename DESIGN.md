@@ -4,6 +4,13 @@ Personal finance app ("like Rocket Money") for exactly one user: Evan.
 Decisions below were resolved in a design interview on 2026-06-11 and supersede
 the stack described in README.md.
 
+Lucre is also a **portfolio piece**: the same deployment doubles as a public,
+recruiter-facing showcase via a sandboxed **demo mode** (fake data, no login),
+while the owner's real data stays private behind login. That dual-purpose layer —
+demo sessions, ephemeral per-visitor data, the intro/About surfaces, and the
+visual-polish bar — is specified in [PRD.md](PRD.md) and governs the
+recruiter/demo surfaces; this document governs the underlying single-user app.
+
 ## Scope
 
 Four jobs, in scope for v1+:
@@ -25,7 +32,10 @@ Out of scope for v1: budget targets/envelopes, investments and loans via Plaid
 - **Backups**: Litestream running alongside the app, streaming the SQLite WAL to
   Cloudflare R2 (free tier). Restore = one litestream command.
 - **Auth**: single hashed password from config + long-lived secure session cookie,
-  rate-limited login route. (Single user; no accounts table.)
+  rate-limited login route. (Single user; no accounts table.) Sessions carry a
+  role — `anonymous/demo` vs `owner` — so demo mode can coexist without user
+  accounts; the data layer routes demo sessions to a throwaway store that can never
+  reach the real tables. See [PRD.md](PRD.md).
 - **Email**: Resend (free tier) for the daily digest and urgent alerts.
 
 ## Data pipeline

@@ -4,7 +4,6 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from sqlalchemy.orm import Session
 
-from auth import require_login
 from database import get_db
 from models import Account, Transaction
 from services.merchants import merchant_key
@@ -14,7 +13,7 @@ from templating import templates
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(dependencies=[Depends(require_login)])
+router = APIRouter()  # open to both roles; get_db routes demo to its sandbox
 
 DbSession = Annotated[Session, Depends(get_db)]
 

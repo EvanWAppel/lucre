@@ -36,10 +36,11 @@ def test_rate_limiter_unlocks_after_window():
     assert not limiter.is_locked()
 
 
-def test_anonymous_request_redirects_to_login(client):
+def test_anonymous_visitor_sees_intro(client):
     response = client.get("/", follow_redirects=False)
-    assert response.status_code == 303
-    assert response.headers["location"] == "/login"
+    assert response.status_code == 200
+    assert "Launch the demo" in response.text
+    assert "Sign in" in response.text  # discreet owner login link
 
 
 def test_login_page_renders(client):
@@ -77,10 +78,12 @@ def test_session_cookie_not_secure_when_disabled(client, override_settings):
 
 def test_logout_clears_session(client):
     client.post("/login", data={"password": TEST_PASSWORD})
-    assert client.get("/").status_code == 200
+    assert client.get("/").status_code == 200  # owner -> dashboard
     client.post("/logout")
+    # Logged out = back to demo: the root now shows the intro, not the dashboard.
     response = client.get("/", follow_redirects=False)
-    assert response.status_code == 303
+    assert response.status_code == 200
+    assert "Launch the demo" in response.text
 
 
 def test_lockout_after_five_failures(client):

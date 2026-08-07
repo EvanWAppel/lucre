@@ -113,8 +113,9 @@ def test_query_paginates_50_per_page(db_session, fake_plaid):
     assert page2.has_next is False
 
 
-def test_transactions_page_requires_login(client):
-    assert client.get("/transactions", follow_redirects=False).status_code == 303
+def test_transactions_page_open_to_demo(client):
+    # Demo visitors can browse the app; they just see their sandboxed data.
+    assert client.get("/transactions", follow_redirects=False).status_code == 200
 
 
 def test_transactions_page_renders_with_pending_marker(client, db_session, fake_plaid):

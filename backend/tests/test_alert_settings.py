@@ -18,8 +18,8 @@ def test_get_alert_settings_creates_singleton_once(db_session):
     assert db_session.query(AlertSettings).count() == 1
 
 
-def test_settings_page_requires_login(client):
-    assert client.get("/settings", follow_redirects=False).status_code == 303
+def test_settings_page_open_to_demo(client):
+    assert client.get("/settings", follow_redirects=False).status_code == 200
 
 
 def test_settings_page_renders(client, db_session, fake_plaid):

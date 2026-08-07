@@ -6,7 +6,6 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
-from auth import require_login
 from database import get_db
 from models import Bill
 from services.bills import upcoming_bills, upcoming_total
@@ -14,7 +13,7 @@ from templating import templates
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(dependencies=[Depends(require_login)])
+router = APIRouter()  # open to both roles; get_db routes demo to its sandbox
 
 DbSession = Annotated[Session, Depends(get_db)]
 
